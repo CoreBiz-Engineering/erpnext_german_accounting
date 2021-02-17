@@ -6,6 +6,25 @@ Alle der oben genannten Buchhaltungsreports basieren auf Skript-Reports. Der log
 
 ## Umsatzsteuer Voranmeldung (UStVA)
 
+Der UStVA-DocType beinhaltet folgende Felder:
+- Kontonummer
+- Kennzeichen
+- Steuersatz
+- Steuerkennzeichen
+- Zeile
+
+Bei dem Report können folgende Filtereinstellungen ausgewählt werden
+- von / bis
+- Layout (Kontenansicht + Kurzansicht)
+
+Es gibt zum einen die Kontenansicht die alle Konten, die bebucht sind, unter ihrer zugeordneten Zeile und dem Kennzeichen(KZ) detailliert aufgelistet werden. Zum anderen gibt es noch die Kurzansicht, die die Ergebnisse der Zeilen kumuliert und ohne die Konten aufzeigt.
+
+# Kurzansicht:
+![alt text](erpnext_german_accounting/docs/Kurzansicht_UStVA.png)
+# Kontenansicht:
+![alt text](erpnext_german_accounting/docs/Kontenansicht_UStVA.png)
+
+
 ## Betriebswirtschaftliche Auswertung (BWA)
 
 ## Offene Posten Liste (OP-Liste)
