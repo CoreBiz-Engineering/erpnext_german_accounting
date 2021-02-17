@@ -52,7 +52,7 @@ app_license = "MIT"
 # website_generators = ["Web Page"]
 
 #Fixtures
-fixtures = ["Steuercodes", "UStVA"]
+fixtures = ["Steuercodes", "UStVA", "BWA", "BWA Kurzbericht"]
 
 # Installation
 # ------------
