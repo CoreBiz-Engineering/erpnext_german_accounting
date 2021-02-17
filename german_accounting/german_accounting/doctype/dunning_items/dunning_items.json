@@ -1,0 +1,88 @@
+{
+ "creation": "2020-05-25 09:50:08.402572",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_invoice",
+  "dunning_stage",
+  "due_date",
+  "overdue_days",
+  "section_break_4",
+  "posting_date",
+  "column_break_8",
+  "invoice_total",
+  "outstanding_amount"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "dunning_stage",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Dunning Stage",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "due_date",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Due Date"
+  },
+  {
+   "columns": 2,
+   "fieldname": "overdue_days",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Overdue Days"
+  },
+  {
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_from": "sales_invoice.posting_date",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "sales_invoice.grand_total",
+   "fieldname": "invoice_total",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Invoice Total"
+  },
+  {
+   "fetch_from": "sales_invoice.outstanding_amount",
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount"
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-05-28 16:14:15.061693",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "Dunning Items",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

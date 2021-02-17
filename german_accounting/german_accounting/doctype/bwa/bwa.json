@@ -1,0 +1,111 @@
+{
+ "allow_import": 1,
+ "creation": "2019-10-31 15:14:46.078735",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "zeile",
+  "zeilen_name",
+  "konto_von",
+  "type",
+  "konto_bis",
+  "zeile_von",
+  "zeile_bis",
+  "funktion"
+ ],
+ "fields": [
+  {
+   "fieldname": "zeile",
+   "fieldtype": "Data",
+   "label": "Zeile"
+  },
+  {
+   "fieldname": "konto_von",
+   "fieldtype": "Data",
+   "label": "Konto von"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Data",
+   "label": "Typ"
+  },
+  {
+   "fieldname": "konto_bis",
+   "fieldtype": "Data",
+   "label": "Konto bis"
+  },
+  {
+   "fieldname": "zeile_von",
+   "fieldtype": "Data",
+   "label": "Zeile von"
+  },
+  {
+   "fieldname": "zeile_bis",
+   "fieldtype": "Data",
+   "label": "Zeile bis"
+  },
+  {
+   "fieldname": "funktion",
+   "fieldtype": "Data",
+   "label": "Funktionsschl\u00fcssel"
+  },
+  {
+   "default": "{zeile} - {zeilen_name}",
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "title"
+  },
+  {
+   "fieldname": "zeilen_name",
+   "fieldtype": "Data",
+   "label": "Name"
+  }
+ ],
+ "modified": "2019-12-16 11:32:59.556549",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "BWA",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "title",
+ "track_changes": 1
+}

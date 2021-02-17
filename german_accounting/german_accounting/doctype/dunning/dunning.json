@@ -1,0 +1,336 @@
+{
+ "allow_events_in_timeline": 1,
+ "autoname": "naming_series:",
+ "creation": "2019-07-05 16:34:31.013238",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "column_break_2",
+  "company_address",
+  "address_and_contact_section",
+  "customer",
+  "customer_name",
+  "column_break_30",
+  "customer_address",
+  "address_display",
+  "section_break_5",
+  "naming_series",
+  "dunning_items",
+  "section_break_4",
+  "outstanding_amount",
+  "total_1",
+  "total_2",
+  "total_3",
+  "column_break_3",
+  "posting_date",
+  "due_date",
+  "overdue_days",
+  "section_break_6",
+  "dunning_type",
+  "interest_amount",
+  "column_break_8",
+  "interest_rate",
+  "dunning_fee",
+  "section_break_12",
+  "sum",
+  "column_break_17",
+  "resolution_status",
+  "printing_setting_section",
+  "language",
+  "currency",
+  "letter_head",
+  "column_break_22",
+  "text_body",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "PR-.MM.-.YY.-",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PR-.MM.-.YY.-"
+  },
+  {
+   "fetch_from": "customer.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "sales_invoice.outstanding_amount",
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fetch_from": "sales_invoice.due_date",
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date"
+  },
+  {
+   "fieldname": "overdue_days",
+   "fieldtype": "Int",
+   "label": "Overdue Days",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_6",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "dunning_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Dunning Type",
+   "options": "Dunning Type"
+  },
+  {
+   "default": "0",
+   "fieldname": "interest_amount",
+   "fieldtype": "Currency",
+   "label": "Interest Amount",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fetch_from": "dunning_type.interest_rate",
+   "fetch_if_empty": 1,
+   "fieldname": "interest_rate",
+   "fieldtype": "Float",
+   "label": "Interest Rate"
+  },
+  {
+   "default": "0",
+   "fetch_from": "dunning_type.dunning_fee",
+   "fetch_if_empty": 1,
+   "fieldname": "dunning_fee",
+   "fieldtype": "Currency",
+   "label": "Dunning Fee",
+   "precision": "2"
+  },
+  {
+   "fieldname": "section_break_12",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "sum",
+   "fieldtype": "Currency",
+   "label": "Sum",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_17",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Unresolved",
+   "fieldname": "resolution_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Resolution Status",
+   "options": "Resolved\nUnresolved"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "printing_setting_section",
+   "fieldtype": "Section Break",
+   "label": "Printing Setting"
+  },
+  {
+   "default": "en",
+   "fieldname": "language",
+   "fieldtype": "Link",
+   "label": "Print Language",
+   "options": "Language"
+  },
+  {
+   "fieldname": "letter_head",
+   "fieldtype": "Link",
+   "label": "Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "column_break_22",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "sales_invoice.currency",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Dunning",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dunning_items",
+   "fieldtype": "Table",
+   "in_standard_filter": 1,
+   "label": "Dunning Items",
+   "options": "Dunning Items",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_30",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company_address",
+   "fieldtype": "Link",
+   "label": "Company Address",
+   "options": "Address",
+   "print_hide": 1
+  },
+  {
+   "fieldname": "customer_address",
+   "fieldtype": "Link",
+   "label": "Customer Address",
+   "options": "Address"
+  },
+  {
+   "fieldname": "address_and_contact_section",
+   "fieldtype": "Section Break",
+   "label": "Address and Contact"
+  },
+  {
+   "fieldname": "address_display",
+   "fieldtype": "Small Text",
+   "label": "Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "text_body",
+   "fieldtype": "Text Editor",
+   "label": "Text",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_1",
+   "fieldtype": "Currency",
+   "label": "total_1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_2",
+   "fieldtype": "Currency",
+   "label": "total_2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_3",
+   "fieldtype": "Currency",
+   "label": "total_3",
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "modified": "2020-09-11 13:44:23.765685",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "Dunning",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "ASC",
+ "title_field": "customer_name",
+ "track_changes": 1
+}

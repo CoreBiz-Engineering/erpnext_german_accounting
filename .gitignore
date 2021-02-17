@@ -1,0 +1,11 @@
+*.class
+*.pyc
+*.pyo
+
+*.swp
+*.csv
+
+tmp/
+temp/
+log/
+__pycache__/

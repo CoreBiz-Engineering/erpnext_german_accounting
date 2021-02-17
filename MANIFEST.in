@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include german_accounting *.css
+recursive-include german_accounting *.csv
+recursive-include german_accounting *.html
+recursive-include german_accounting *.ico
+recursive-include german_accounting *.js
+recursive-include german_accounting *.json
+recursive-include german_accounting *.md
+recursive-include german_accounting *.png
+recursive-include german_accounting *.py
+recursive-include german_accounting *.svg
+recursive-include german_accounting *.txt
+recursive-exclude german_accounting *.pyc

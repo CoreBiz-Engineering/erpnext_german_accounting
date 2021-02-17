@@ -1,0 +1,49 @@
+{
+ "creation": "2019-12-06 04:25:40.215625",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "language",
+  "top_text_block",
+  "bottom_text_block",
+  "text_block_help"
+ ],
+ "fields": [
+  {
+   "fieldname": "language",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Language",
+   "options": "Language"
+  },
+  {
+   "fieldname": "top_text_block",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Top Text Block"
+  },
+  {
+   "fieldname": "bottom_text_block",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Bottom Text Block"
+  },
+  {
+   "fieldname": "text_block_help",
+   "fieldtype": "HTML",
+   "label": "Text Block Help",
+   "options": "<h4>Standard Text Example</h4>\n\n<div>We have noticed that you have not yet paid invoice {{sales_invoice}} for {{frappe.db.get_value(\"Currency\", currency, \"symbol\")}} {{outstanding_amount}}. This is a friendly reminder that the invoice was due on {{due_date}}. Please pay the amount due immediately to avoid any further dunning cost.</div>\n\n<h4>How to get fieldnames</h4>\n\n<p>The fieldnames you can use in your template are the fields in the document. You can find out the fields of any documents via Setup &gt; Customize Form View and selecting the document type (e.g. Sales Invoice)</p>\n\n<h4>Templating</h4>\n\n<p>Templates are compiled using the Jinja Templating Langauge. To learn more about Jinja, <a class=\"strong\" href=\"http://jinja.pocoo.org/docs/dev/templates/\">read this documentation.</a></p>"
+  }
+ ],
+ "istable": 1,
+ "modified": "2020-06-02 13:51:00.297212",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "Dunning Type Text Block",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

@@ -1,0 +1,29 @@
+{
+ "content": null,
+ "creation": "2020-01-23 08:57:29.651977",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2020-01-28 09:36:20.057243",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "buchungen",
+ "owner": "Administrator",
+ "page_name": "Buchungen",
+ "roles": [
+  {
+   "role": "Administrator"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Accounts User"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Buchungen"
+}

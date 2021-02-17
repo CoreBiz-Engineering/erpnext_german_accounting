@@ -1,0 +1,108 @@
+.account-container {
+    padding: 0 15px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.tax-container {
+    padding: 0 15px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.submit-container {
+    padding: 0 15px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.booking_type{
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.account_soll {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.voucher_id {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.voucher_date {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.account_haben {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.voucher_value {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.voucher_netto_value {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.fiscal_year {
+    width: 20%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.tax_kind {
+    width: 7%;
+    padding: 10px;
+    display: inline-block;
+
+}
+
+.tax_code {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.country_code {
+    width: 10%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.tax_value {
+    width: 10%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.posting_text_1 {
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.cost_center {
+    width: 20%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.accounting_dimension {
+    width: 20%;
+    padding: 10px;
+    display: inline-block;
+}

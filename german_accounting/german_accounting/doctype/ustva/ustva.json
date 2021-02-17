@@ -1,0 +1,96 @@
+{
+ "allow_import": 1,
+ "creation": "2019-10-31 10:44:54.537919",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "account_number",
+  "mark",
+  "tax",
+  "tax_mark",
+  "row",
+  "rank"
+ ],
+ "fields": [
+  {
+   "fieldname": "account_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Kontonummer",
+   "unique": 1
+  },
+  {
+   "fieldname": "mark",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Kennzeichen"
+  },
+  {
+   "fieldname": "tax",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Steuer"
+  },
+  {
+   "fieldname": "tax_mark",
+   "fieldtype": "Data",
+   "label": "Steuerkennzeichen"
+  },
+  {
+   "fieldname": "row",
+   "fieldtype": "Data",
+   "label": "Zeile"
+  },
+  {
+   "fieldname": "rank",
+   "fieldtype": "Data",
+   "label": "Rang"
+  }
+ ],
+ "modified": "2020-07-27 10:00:36.952285",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "UStVA",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "account_number",
+ "sort_order": "ASC",
+ "title_field": "account_number",
+ "track_changes": 1
+}
