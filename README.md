@@ -20,7 +20,7 @@ Bei dem Report können folgende Filtereinstellungen ausgewählt werden
 Es gibt zum einen die Kontenansicht die alle Konten, die bebucht sind, unter ihrer zugeordneten Zeile und dem Kennzeichen(KZ) detailliert aufgelistet werden. Zum anderen gibt es noch die Kurzansicht, die die Ergebnisse der Zeilen kumuliert und ohne die Konten aufzeigt.
 
 # Kurzansicht:
-![alt text](erpnext_german_accounting/docs/Kurzansicht_UStVA.png)
+![alt text](docs/Kurzansicht_UStVA.png)
 # Kontenansicht:
 ![alt text](erpnext_german_accounting/docs/Kontenansicht_UStVA.png)
 
