@@ -19,9 +19,9 @@ Bei diesem Report können folgende Filtereinstellungen ausgewählt werden
 
 Es gibt zum einen die Kontenansicht die alle Konten, die bebucht sind, unter ihrer zugeordneten Zeile und dem Kennzeichen(KZ) detailliert aufgelistet werden. Zum anderen gibt es noch die Kurzansicht, die die Ergebnisse der Zeilen kumuliert und ohne die Konten aufzeigt.
 
-# Kurzansicht:
+### Kurzansicht:
 ![alt text](docs/Kurzansicht_UStVA.png)
-# Kontenansicht:
+### Kontenansicht:
 ![alt text](docs/Kontenansicht_UStVA.png)
 
 
@@ -55,13 +55,13 @@ Bei diesem Report können folgende Filtereinstellungen ausgewählt werden
 - Layout (BWA, BWA Kontenansicht und BWA Kurzbericht)
 - Vorjahresvergleich (Bei Kontenansicht)
 
-# BWA:
+### BWA:
 ![alt text](docs/BWA.png)
 
-# BWA Kontenansicht
+### BWA Kontenansicht
 ![alt text](docs/BWA_Kontenansicht.png)
 
-# BWA Kurzbericht
+### BWA Kurzbericht
 ![alt text](docs/BWA_Kurzbericht.png)
 
 
@@ -80,7 +80,7 @@ Die Filter von diesem Report sind:
 - Buchungsdatum
 - Skonto
 
-# OP-Liste:
+### OP-Liste:
 ![alt text](docs/OP_Liste.png)
 
 #### License
