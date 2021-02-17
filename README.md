@@ -1,4 +1,4 @@
-### German Accounting
+# German Accounting
 
 Reports für die deutsche Buchhaltung wie z.B. die Betriebswirtschaftliche Auswertung (BWA) und  Umsatzsteuer Voranmeldung (UStVA) sowie OP-Liste.
 
