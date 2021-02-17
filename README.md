@@ -69,7 +69,7 @@ Bei diesem Report können folgende Filtereinstellungen ausgewählt werden:
 
 Der Offene-Posten-Report (OP-Liste) ist eine Übersicht über alle Rechnungen, die noch nicht bezahlt sind. In diesem Report können die einzelnen Rechnungen (Sales Invoice) angeklickt werden und via Button (Create Payment) eine Zahlung als Buchungssatz (Journal Entry) generiert werden. Es können auch Teilbuchungen pro Rechnung angegeben werden. Mit der Skonto-Checkbox können Skonto sowie Zahlungsdifferenzen entsprechend verbucht werden.
 
-Es gäbe auch die Möglichkeit, hierüber die Mahnungen zu kontrollieren, da dieser Report auch per Button Mahnungen erstellen könnte. In diesem Repo wird dies vermutlich nicht funktionieren, da wir dafür das Dunning-Modul von Alyf (https://github.com/alyf-de/erpnext_dunning) entsprechend angepasst hatten, sodass in einer Mahnung mehrere Positionen gemahnt werden können und jede Position ihre eigene Mahnstufe hat, die bei jeder Mahnung automatisch hochzählt.
+Es gäbe auch die Möglichkeit, hierüber die Mahnungen zu kontrollieren, da dieser Report auch per Button Mahnungen erstellen könnte. In diesem Repo wird dies vermutlich nicht funktionieren, da wir dafür das Dunning-Modul von Alyf (https://github.com/alyf-de/erpnext_dunning, befindet sich mittlerweile im ERPnext-Core) entsprechend angepasst hatten, sodass in einer Mahnung mehrere Positionen gemahnt werden können und jede Position ihre eigene Mahnstufe hat, die bei jeder Mahnung automatisch hochzählt.
 
 Die Filter von diesem Report sind:
 - Unternehmen
