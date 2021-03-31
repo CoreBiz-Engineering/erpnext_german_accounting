@@ -41,12 +41,10 @@ def execute(filters=None):
 			data = sorted(data, key=lambda k: k['zeile'])
 	return columns, data
 
-
 def get_last_year(date):
 	# set the year to compare
 	d = datetime.datetime.strptime(date, "%Y-%m-%d")
 	return datetime.datetime.strftime((d.replace(year = d.year - 1)), "%Y-%m-%d")
-
 
 def merge_data(data, last_data):
 	for previous_year in last_data:
@@ -67,7 +65,6 @@ def merge_data(data, last_data):
 					actual_year['in_percentage'] = difference
 	return data
 
-
 def merge_bwa(bwa, last_bwa):
 	for previous_year in last_bwa:
 		for actual_year in bwa:
@@ -87,7 +84,6 @@ def merge_bwa(bwa, last_bwa):
 
 					actual_year['in_percentage'] = difference
 	return bwa
-
 
 def get_bwa_account_columns(comparison):
 	columns = []
@@ -208,7 +204,6 @@ def get_bwa_account_columns(comparison):
 
 	return columns
 
-
 def get_short_columns():
 	columns = [
 		{
@@ -235,7 +230,6 @@ def get_short_columns():
 		}
 	]
 	return columns
-
 
 def get_columns():
 	columns = [
@@ -281,7 +275,6 @@ def get_columns():
 	]
 	return columns
 
-
 def get_bwa_short_accounts():
 	sel =	"""
 			select
@@ -299,7 +292,6 @@ def get_bwa_short_accounts():
 			"""
 	res = frappe.db.sql(sel, as_dict=1)
 	return res
-
 
 def get_bwa_accounts():
 	sel = 	"""
@@ -321,7 +313,6 @@ def get_bwa_accounts():
 			"""
 	bwa_accounts = frappe.db.sql(sel, as_dict=1)
 	return bwa_accounts
-
 
 def get_bwa_sum_rows():
 	"""
@@ -349,7 +340,6 @@ def get_bwa_sum_rows():
 	bwa_sum_rows = frappe.db.sql(sel, as_dict=1)
 	return bwa_sum_rows
 
-
 def get_gl_entries(accounts, filters):
 	"""
 	get the GL Entries from the database
@@ -366,16 +356,11 @@ def get_gl_entries(accounts, filters):
 	for row in rows:
 		gl_entries = []
 
-		'''
-		Query noch mal im Kontext prüfen! bzgl. konto von / bis
-		'''
 		sel =	"""
 				select
 					gl.account,
-					case
-						when bwa.type = 'H' then gl.credit
-						when bwa.type = 'S' then gl.debit 
-					end as 'sum',
+					gl.debit,
+					gl.credit,
 					bwa.type,
 					bwa.funktion
 				from
@@ -394,20 +379,21 @@ def get_gl_entries(accounts, filters):
 
 		sum_deb = 0
 		sum_cred = 0
+		sum_account = 0
 		sum = 0
+
 		if gl_entries:
 			for account_data in gl_entries:
-				if account_data.get('type') == 'S':
-					sum += account_data.get('sum')
-					sum_deb += account_data.get('sum')
+				if account_data.get('debit'):
+					sum += account_data.get('debit')
+					sum_account += account_data.get('debit')
+				elif account_data.get('credit'):
+					sum += account_data.get('credit')*(-1)
+					sum_account += account_data.get('credit')*(-1)
 
-				elif account_data.get('type') == 'H':
-					sum += account_data.get('sum')*(-1)
-					sum_cred += account_data.get('sum')
-			res.append({"zeile": row, 'sum': sum, 'debit': round(sum_deb,2), 'credit': round(sum_cred,2)})
+			res.append({"zeile": row, 'sum': sum, 'debit_credit': sum_account, 'debit': round(sum_deb,2), 'credit': round(sum_cred,2)})
 
 	return res
-
 
 def sum_account_to_rows(sum_rows, account_values):
 	sum_row_order = []
@@ -449,9 +435,7 @@ def sum_account_to_rows(sum_rows, account_values):
 
 	return sum_rows
 
-
 def calc_short_bwa(bwa, accounts):
-
 	ordered_list = []
 	for row in accounts:
 		if row.get('zeile') not in ordered_list and row.get('zeile') != '' and row.get('zeile') is not None:
@@ -475,7 +459,6 @@ def calc_short_bwa(bwa, accounts):
 
 	return accounts
 
-
 def get_row_5440(bwa_row, bwa, accounts):
 	res = 0
 	for sum in bwa:
@@ -488,14 +471,12 @@ def get_row_5440(bwa_row, bwa, accounts):
 
 	return res
 
-
 def get_row_addition(r_from, r_to, accounts):
 	res = 0
 	for sum in accounts:
 		if sum.get('zeile') == r_from or sum.get('zeile') == r_to:
 			res += sum.get('sum')
 	return res
-
 
 def get_span_subtotal(r_from, r_to, accounts):
 	res = 0
@@ -504,7 +485,6 @@ def get_span_subtotal(r_from, r_to, accounts):
 			res += sum.get('sum')
 
 	return res
-
 
 def get_row_subtotal(row, bwa):
 	"""
@@ -546,7 +526,6 @@ def calc_bwa(sub_rows, account_totals):
 
 	return res
 
-
 def function_key_1(sub_row, account_totals):
 	"""
 	Funktionsschlüssel 1 (Addition)
@@ -576,7 +555,6 @@ def function_key_1(sub_row, account_totals):
 	#return {'sum': sum, 'zeile': zeile}
 	return sum
 
-
 def function_key_2(sub_row, account_totals):
 	"""
 	Funktionsschlüssel 2 (Subtraktion)
@@ -601,7 +579,6 @@ def function_key_2(sub_row, account_totals):
 
 	return sum
 
-
 def function_key_7():
 	"""
 	Funktionsschlüssel 7
@@ -625,7 +602,6 @@ def function_key_7():
 	vorhergehenden Auswertungszeitraums eingestellt.
 	"""
 	pass
-
 
 def function_key_18():
 	"""
@@ -652,7 +628,6 @@ def function_key_18():
 	"""
 	pass
 
-
 def function_key_28():
 	"""
 	Funktionsschlüssel 28
@@ -674,19 +649,16 @@ def function_key_28():
 	ausgewiesen. In der Spalte des vorhergehenden Auswertungszeitraums erscheint der Bestimmte Gruppensaldo der
 	Jahresverkehrszahlen (JVZ).
 	"""
-
 	pass
-
 
 def get_accounts(zeile, acc_from, acc_to, date_from, date_to):
 	sel =	"""
 			select
 				acc.account_number,
 				gl.account,
-				case
-				when bwa.type = 'H' then sum(gl.credit)
-				when bwa.type = 'S' then sum(gl.debit)
-				end as 'sum',
+				sum(gl.debit) as debit,
+				sum(gl.credit) as credit,
+				bwa.type,
 				bwa.funktion
 			from
 				`tabGL Entry` gl,
@@ -703,13 +675,11 @@ def get_accounts(zeile, acc_from, acc_to, date_from, date_to):
 			group by gl.account,acc.account_number
 			order by acc.account_number
 			""".format(acc_from=acc_from, acc_to=acc_to, date_from=date_from, date_to=date_to)
-
 	gl_entries = frappe.db.sql(sel, as_dict=1)
+
 	return gl_entries
 
-
 def get_space():
-
 	sel =	"""
 			select
 				zeile,
@@ -728,27 +698,21 @@ def get_space():
 
 	return res
 
-
 def get_bwa_result(filters):
-
 	accounts = get_bwa_accounts()
 	sum_rows = get_bwa_sum_rows()
 
 	account_values = get_gl_entries(accounts, filters)
 	res = calc_bwa(sub_rows=sum_rows, account_totals=account_values)
 	#res = sum_account_to_rows(sum_rows=sum_rows, account_values=account_values)
-
 	return res
 
-
 def get_bwa_short_result(filters):
-
 	accounts = get_bwa_short_accounts()
 	bwa = get_bwa_result(filters)
 
 	res = calc_short_bwa(bwa, accounts)
 	return res
-
 
 def get_bwa_account_result(filters):
 	account_rows = get_bwa_accounts()
@@ -757,18 +721,32 @@ def get_bwa_account_result(filters):
 		return
 	row_sum = get_gl_entries(account_rows, filters)
 	acc_res = []
+
 	for elem in account_rows:
 		head = 0
 		if elem.get('konto_von') and elem.get('konto_bis'):
 
-			acc_subtotal = get_accounts(zeile=elem.get('zeile'), acc_from=elem.get('konto_von'),
-										acc_to=elem.get('konto_bis'), date_from=filters.get('from_date'),
+			acc_subtotal = get_accounts(zeile=elem.get('zeile'),
+										acc_from=elem.get('konto_von'),
+										acc_to=elem.get('konto_bis'),
+										date_from=filters.get('from_date'),
 										date_to=filters.get('to_date'))
 
 			for subtotal in acc_subtotal:
-				if head == 0:
-					sum = 0
+				sum_acc = 0
+				sum = 0
+				if (subtotal.get('type')).upper() == "S":
+					if subtotal.get('debit'):
+						sum_acc += subtotal.get('debit')
+					if subtotal.get('credit'):
+						sum_acc += subtotal.get('credit')*(-1)
+				elif (subtotal.get('type')).upper() == "H":
+					if subtotal.get('debit'):
+						sum_acc += subtotal.get('debit')*(-1)
+					if subtotal.get('credit'):
+						sum_acc += subtotal.get('credit')
 
+				if head == 0:
 					for acc_sum in row_sum:
 						if acc_sum.get('zeile') == elem.get('zeile'):
 							sum = acc_sum.get('sum')
@@ -780,26 +758,25 @@ def get_bwa_account_result(filters):
 						'zeilen_name': elem.get('zeilen_name'),
 						'account': subtotal.get('account_number'),
 						'name': subtotal.get('account'),
-						'sum': subtotal.get('sum'),
+						'sum': sum_acc,
 						'type': elem.get('type'),
 						'funktion': elem.get('funktion'),
 						'subtotal': round(sum, 2)
 					})
 					head = 1
 				else:
-
 					acc_res.append({
 						'zeile': elem.get('zeile'),
 						'sort_zeile': elem.get('zeile'),
 						'sort_name': elem.get('zeilen_name'),
 						'account': subtotal.get('account_number'),
 						'name': subtotal.get('account'),
-						'sum': subtotal.get('sum'),
+						'sum': sum_acc,
 						'type': elem.get('type'),
 						'funktion': elem.get('funktion')
 					})
-	sub_acc = []
 
+	sub_acc = []
 	for acc in acc_res:
 		if acc.get('zeile') not in sub_acc:
 			sub_acc.append(acc.get('zeile'))
