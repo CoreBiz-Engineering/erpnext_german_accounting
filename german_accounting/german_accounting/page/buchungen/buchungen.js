@@ -32,11 +32,14 @@ frappe.pages['buchungen'].refresh = function(wrapper){
                     fiscal_year: acc.fiscal_year.get_input_value(),
                     voucher_netto_value: acc.voucher_netto_value.get_input_value(),
                     booking_type: acc.booking_type.get_input_value(),
+                    is_opening: acc.is_opening.get_input_value(),
                     cost_center: acc.cost_center.get_input_value(),
                     accounting_dimension: acc.accounting_dimension.get_input_value(),
+                    project: acc.project.get_input_value(),
+                    due_date: acc.due_date.get_input_value(),
                 }
             })
-            frappe.ui.toolbar.clear_cache();
+            //frappe.ui.toolbar.clear_cache();
         } else {
             alert("Fehlende Felder")
         }
@@ -52,13 +55,14 @@ erpnext.Buchung = class Buchung {
         this.wrapper = $(wrapper).find('.layout-main-section');
         this.page = wrapper.page;
 
-        const assets = [
+        /*const assets = [
             'assets/erpnext/js/pos/clusterize.js',
         ];
 
         frappe.require(assets, () => {
             this.make();
-        });
+        });*/
+        this.make();
 
     }
 
@@ -137,7 +141,9 @@ class Account {
     make_dom() {
         this.wrapper.append(`
             <div class="account_wrapper">
-                <div class="booking_type"> 
+                <div class="booking_type">
+                </div>
+                <div class="is_opening">
                 </div><br>
                 <div class="account_soll"> 
                 </div>
@@ -145,17 +151,27 @@ class Account {
                 </div>
                 <div class="voucher_date">
                 </div>
+                <div class="due_date">
+                </div>
+                <div class="soll_total">
+                </div>
+                <div class="soll_s_h">
+                </div>
                 <div class="account_haben">
                 </div>
                 <div class="voucher_value">
                 </div>
                 <div class="voucher_netto_value">
                 </div>
+                <div class="haben_total">
+                </div>
                 <div class="fiscal_year">
                 </div>
                 <div class="cost_center">
                 </div>
                 <div class="accounting_dimension">
+                </div>
+                <div class="project"
                 </div>
             </div>
         `);
@@ -174,12 +190,47 @@ class Account {
             render_input: true
         });
 
+        this.soll_total = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Currency',
+                label: 'Soll Total',
+                fieldname: 'soll_total',
+                read_only: 1,
+            },
+            parent: this.wrapper.find('.soll_total'),
+            render_input: true
+        });
+
+        this.soll_total = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Currency',
+                label: 'Haben Total',
+                fieldname: 'haben_total',
+                read_only: 1,
+            },
+            parent: this.wrapper.find('.haben_total'),
+            render_input: true
+        });
+
         this.account_soll = frappe.ui.form.make_control({
             df: {
                 fieldtype: 'Link',
                 label: 'Sollkonto',
                 fieldname: 'account_soll',
                 options: 'Account',
+                change: function () {
+                    frappe.call({
+                        method: "german_accounting.german_accounting.page.buchungen.buchungen.calc_account_total_amount",
+                        args: {
+                            account: acc.account_soll.get_input_value(),
+                            fiscal_year: acc.fiscal_year.get_input_value()
+                        },
+                        callback: function(r) {
+                            var res = r.message;
+                            $("div[data-fieldname='soll_total'] .control-value").text(res.value);
+                        }
+                    });
+                }
             },
             parent: this.wrapper.find('.account_soll'),
             render_input: true
@@ -197,12 +248,35 @@ class Account {
             render_input: true
         });
 
+        this.is_opening = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Check',
+                label: 'Ist EB-Wert',
+                fieldname: 'is_opening',
+            },
+            parent: this.wrapper.find('.is_opening'),
+            render_input: true
+        });
+
         this.account_haben = frappe.ui.form.make_control({
             df: {
                 fieldtype: 'Link',
                 label: 'Habenkonto',
                 fieldname: 'account_haben',
                 options: 'Account',
+                change: function () {
+                    frappe.call({
+                        method: "german_accounting.german_accounting.page.buchungen.buchungen.calc_account_total_amount",
+                        args: {
+                            account: acc.account_haben.get_input_value(),
+                            fiscal_year: acc.fiscal_year.get_input_value()
+                        },
+                        callback: function(r) {
+                            var res = r.message;
+                            $("div[data-fieldname='haben_total'] .control-value").text(res.value);
+                        }
+                    });
+                }
             },
             parent: this.wrapper.find('.account_haben'),
             render_input: true
@@ -215,6 +289,16 @@ class Account {
                 fieldname: 'voucher_date',
             },
             parent: this.wrapper.find('.voucher_date'),
+            render_input: true
+        });
+
+        this.due_date = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Date',
+                label: 'Fälligkeitsdatum',
+                fieldname: 'due_date',
+            },
+            parent: this.wrapper.find('.due_date'),
             render_input: true
         });
 
@@ -283,6 +367,17 @@ class Account {
                 options: 'Kostentraeger',
             },
             parent: this.wrapper.find('.accounting_dimension'),
+            render_input: true
+        });
+
+        this.project = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Link',
+                label: __('Project'),
+                field_name: 'project',
+                options: 'Project',
+            },
+            parent: this.wrapper.find('.project'),
             render_input: true
         });
     }
@@ -418,30 +513,3 @@ class Tax {
         });
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

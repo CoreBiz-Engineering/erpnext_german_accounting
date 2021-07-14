@@ -1,4 +1,4 @@
-Metadata-Version: 1.0
+Metadata-Version: 2.1
 Name: german-accounting
 Version: 0.0.1
 Summary: Reports for German Accounting like BWA, USt-VA etc.
@@ -6,5 +6,7 @@ Home-page: UNKNOWN
 Author: LIS
 Author-email: mtraeber@linux-ag.com
 License: UNKNOWN
-Description: UNKNOWN
 Platform: UNKNOWN
+
+UNKNOWN
+

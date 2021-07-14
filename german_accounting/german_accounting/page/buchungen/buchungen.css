@@ -22,6 +22,12 @@
     display: inline-block;
 }
 
+.is_opening{
+    width: 30%;
+    padding: 10px;
+    display: inline-block;
+}
+
 .account_soll {
     width: 30%;
     padding: 10px;
@@ -35,7 +41,13 @@
 }
 
 .voucher_date {
-    width: 30%;
+    width: 15%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.due_date {
+    width: 15%;
     padding: 10px;
     display: inline-block;
 }
@@ -52,6 +64,13 @@
     display: inline-block;
 }
 
+.soll_total {
+    width: 30%;
+}
+
+.haben_total {
+    width: 30%;
+}
 .voucher_netto_value {
     width: 30%;
     padding: 10px;
@@ -102,6 +121,12 @@
 }
 
 .accounting_dimension {
+    width: 20%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.project {
     width: 20%;
     padding: 10px;
     display: inline-block;

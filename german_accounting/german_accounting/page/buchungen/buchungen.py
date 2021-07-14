@@ -84,7 +84,7 @@ def create_journal_entry_account(data):
 
     journal_entry_account = []
     for elem in data:
-        if elem in ['acc_soll', 'acc_haben', 'acc_tax']:
+        if elem in ['acc_soll', 'acc_haben', 'acc_tax_vs', 'acc_tax_us']:
             # create hash for naming in DB without naming_series
             hash = make_autoname(key='hash', doctype='Journal Entry', doc=data.get('doc'))
             credit = 0.00
@@ -93,49 +93,67 @@ def create_journal_entry_account(data):
             account = ''
             a_account = ''
             #setting params
-            if data.get('tax_kind') == 'US':
-                if elem == 'acc_soll':
-                    debit = data.get('value')
-                    account = data.get(elem)
-                    a_account = data.get('acc_haben')
-                    idx = 1
-                elif elem == 'acc_haben':
-                    credit = data.get('debit_value')
-                    account = data.get(elem)
-                    a_account = data.get('acc_soll')+', '+data.get('acc_haben')
-                    idx = 3
-                elif elem == 'acc_tax':
-                    credit = data.get('tax_value')
-                    account = data.get('tax_account')
-                    a_account = data.get('acc_haben')
-                    idx = 2
-            elif data.get('tax_kind') == 'VS':
-                if elem == 'acc_soll':
-                    debit = data.get('debit_value')
-                    account = data.get(elem)
-                    a_account = data.get('acc_haben')
-                elif elem == 'acc_haben':
-                    credit = data.get('value')
-                    account = data.get(elem)
-                    a_account = data.get('acc_soll')+', '+data.get('acc_haben')
-                    idx = 3
-                elif elem == 'acc_tax':
+            if data.get('tax_code')[:3] in ['326', '118']:
+                if elem == 'acc_tax_vs':
                     debit = data.get('tax_value')
-                    account = data.get('tax_account')
+                    account = data.get('acc_tax_vs')
                     a_account = data.get('acc_haben')
-                    idx = 2
-            elif data.get('tax_kind') == '0':
-                if elem == 'acc_soll':
-                    debit = data.get('value')
-                    account = data.get(elem)
+                elif elem == 'acc_tax_us':
+                    credit = data.get('tax_value')
+                    account = data.get('acc_tax_us')
                     a_account = data.get('acc_haben')
-                    idx = 1
                 elif elem == 'acc_haben':
                     credit = data.get('value')
                     account = data.get(elem)
                     a_account = data.get('acc_soll')+', '+data.get('acc_haben')
-                    idx = 2
-            idx = len(journal_entry_account) +1
+                elif elem == 'acc_soll':
+                    debit = data.get('value')
+                    account = data.get(elem)
+                    a_account = data.get('acc_haben')
+            else:
+                if data.get('tax_kind') == 'US':
+                    if elem == 'acc_soll':
+                        debit = data.get('value')
+                        account = data.get(elem)
+                        a_account = data.get('acc_haben')
+                        idx = 1
+                    elif elem == 'acc_haben':
+                        credit = data.get('debit_value')
+                        account = data.get(elem)
+                        a_account = data.get('acc_soll')+', '+data.get('acc_haben')
+                        idx = 3
+                    elif elem == 'acc_tax_us':
+                        credit = data.get('tax_value')
+                        account = data.get('acc_tax_us')
+                        a_account = data.get('acc_haben')
+                        idx = 2
+                elif data.get('tax_kind') == 'VS':
+                    if elem == 'acc_soll':
+                        debit = data.get('debit_value')
+                        account = data.get(elem)
+                        a_account = data.get('acc_haben')
+                    elif elem == 'acc_haben':
+                        credit = data.get('value')
+                        account = data.get(elem)
+                        a_account = data.get('acc_soll')+', '+data.get('acc_haben')
+                        idx = 3
+                    elif elem == 'acc_tax_vs':
+                        debit = data.get('tax_value')
+                        account = data.get('acc_tax_vs')
+                        a_account = data.get('acc_haben')
+                        idx = 2
+                elif data.get('tax_kind') == '0':
+                    if elem == 'acc_soll':
+                        debit = data.get('value')
+                        account = data.get(elem)
+                        a_account = data.get('acc_haben')
+                        idx = 1
+                    elif elem == 'acc_haben':
+                        credit = data.get('value')
+                        account = data.get(elem)
+                        a_account = data.get('acc_soll')+', '+data.get('acc_haben')
+                        idx = 2
+            idx = len(journal_entry_account) + 1
             values = {'debit_in_account_currency': debit, 'credit_in_account_currency': credit, 'account': account,
                       'a_account': a_account, 'idx': 1}
 
@@ -146,7 +164,7 @@ def create_journal_entry_account(data):
                 sql = '''select name from `tabSupplier` 
                                             where name like "%{acc_no}"'''.format(
                     acc_no=account_information.get('account_number'))
-                print(sql)
+
                 supplier = frappe.db.sql(sql, as_dict=1)[0]
                 values['party_type'] = 'Supplier'
                 values['party'] = supplier.get('name')
@@ -164,6 +182,8 @@ def create_journal_entry_account(data):
             if data.get('accounting_dimension') and account_information.get('report_type') == 'Profit and Loss':
                 values['kostentraeger'] = data.get('accounting_dimension')
                 values['idx'] = 2
+            if data.get('project') and account_information.get('report_type') == 'Profit and Loss':
+                values['project'] = data.get('project')
 
             journal_entry_account.append(values)
 
@@ -172,21 +192,24 @@ def create_journal_entry_account(data):
 def get_tax_code_data(data):
     #get taxinformation from db-doctype
     tax_data = frappe.get_value('Steuercodes', data.get('tax_code'),
-                                ['title', 'account_ust', 'account_vst', 'tax_rate'],
+                                ['title', 'tax_code', 'account_ust', 'account_vst', 'tax_rate'],
                                 as_dict=1)
 
     data['tax_rate'] = tax_data.get('tax_rate')
-    if data.get('tax_kind') == "US":
-        data['acc_tax'] = tax_data.get('account_ust')
-    else:
-        data['acc_tax'] = tax_data.get('account_vst')
+    if data.get('tax_kind') == "US" or tax_data.get('tax_code') in ['326', '118']:
+        data['acc_tax_us'] = tax_data.get('account_ust')
+    if data.get('tax_kind') == "VS" or tax_data.get('tax_code') in ['326', '118']:
+        data['acc_tax_vs'] = tax_data.get('account_vst')
 
-    if data.get('acc_tax'):
-        try:
-            tax_account = (frappe.get_value('Account', filters={"account_number": data.get('acc_tax')}, as_dict=1)).get('name')
-            data['tax_account'] = tax_account
-        except:
-            data['tax_account'] = ''
+    for tax in ['acc_tax_us', 'acc_tax_vs']:
+        if data.get(tax):
+            try:
+                tax_account = (
+                    frappe.get_value('Account', filters={"account_number": data.get(tax)}, as_dict=1)).get(
+                    'name')
+                data[tax] = tax_account
+            except:
+                data[tax] = ''
 
     return data
 
@@ -198,12 +221,19 @@ def calc_account_values(tax_data):
     if tax_data.get('tax_rate') is None:
         debit_value = float(tax_data.get('value'))
         tax_value = 0.00
+    elif tax_data.get('tax_code')[:3] in ['326', '118']:
+        tax_value = round(float(tax_data.get('value')) * (float(tax_data.get('tax_rate'))/100), 2)
+        debit_value = float(tax_data.get('value'))
+        pass
     elif float(tax_data.get('tax_rate')) != 0.00:
-        debit_value = round((float(tax_data.get('value')) / (1+float(tax_data.get('tax_rate'))/100)),2)
-        tax_value = float(tax_data.get('value')) - debit_value
 
-    tax_data['tax_value'] = round(tax_value,2)
-    tax_data['debit_value'] = round(debit_value,2)
+        debit_value = round((float(tax_data.get('value')) / (1+float(tax_data.get('tax_rate'))/100)), 2)
+        tax_value = float(tax_data.get('value')) - debit_value
+        # tax_value = round(float(tax_data.get('value')) * (float(tax_data.get('tax_rate'))/100),2)
+        # debit_value = float(tax_data.get('value')) - tax_value
+
+    tax_data['tax_value'] = round(tax_value, 2)
+    tax_data['debit_value'] = round(debit_value, 2)
 
     return tax_data
 
@@ -218,6 +248,7 @@ def create_journal_entry(data, entry_account):
         'total_credit':data.get('value'),
         'remark':data.get('posting_text'),
         'cheque_no':data.get('voucher_id'),
+        'is_opening': data.get('is_opening'),
         'bill_no':data.get('voucher_id'),
         'posting_date': data.get('voucher_date'),
         'bill_date':data.get('voucher_date'),
@@ -225,6 +256,10 @@ def create_journal_entry(data, entry_account):
         'user_remark':data.get('posting_text'),
         'accounts': entry_account
     })
+
+    if data.get('due_date'):
+        journal_entry.set('due_date', data.get('due_date'))
+
     journal_entry.insert()
     #journal_entry.submit()
     #journal_entry.save()
@@ -287,10 +322,15 @@ def update_invoice(doc_data):
 @frappe.whitelist()
 def change_event_value(value, tax_kind, tax_code):
 
-    data = {'value': value.replace('.','').replace(',','.'),
+    data = {'value': value.replace('.', '').replace(',', '.'),
             'tax_kind': tax_kind,
             'tax_code': tax_code}
 
+    # fuer EG-Buchungen, die VS und US Konten buchen und Netto = Brutto ist
+    if tax_code[:3] in ['326', '118']:
+        data = get_tax_code_data(data)
+        res = calc_account_values(data)
+        return {'tax_value': res.get('tax_value'), 'debit_value': value}
     if value and tax_code and tax_kind:
         if tax_kind != '0':
             data = get_tax_code_data(data)
@@ -300,9 +340,9 @@ def change_event_value(value, tax_kind, tax_code):
         return
 
 @frappe.whitelist()
-def generate_journal_entries(user,acc_soll,voucher_id,voucher_date,acc_haben,value,tax_kind,tax_code,
-                             country_code,tax_value,posting_text,fiscal_year,voucher_netto_value,booking_type,cost_center,
-                             accounting_dimension):
+def generate_journal_entries(user, acc_soll,voucher_id, voucher_date, acc_haben, value, tax_kind, tax_code,
+                             country_code, tax_value, posting_text, fiscal_year, voucher_netto_value, booking_type,
+                             is_opening, cost_center, accounting_dimension, project, due_date):
     #get the metadata from doctype
     doc = frappe.get_meta('Journal Entry')
 
@@ -310,9 +350,9 @@ def generate_journal_entries(user,acc_soll,voucher_id,voucher_date,acc_haben,val
     key = 'ACC-JV-.YYYY.-'
     naming_series = make_autoname(key=key, doctype='Journal Entry', doc=doc)
     company = frappe.db.get_single_value("Global Defaults", "default_company")
-    print(frappe.db.get_single_value("Global Defaults", "default_company"))
     voucher_date = datetime.strptime(voucher_date, '%d.%m.%Y').strftime('%Y-%m-%d')
-
+    if due_date:
+        due_date = datetime.strptime(due_date, '%d.%m.%Y').strftime('%Y-%m-%d')
     #map data from Frontend
     doc_data = {
         "name": naming_series,
@@ -333,8 +373,11 @@ def generate_journal_entries(user,acc_soll,voucher_id,voucher_date,acc_haben,val
         "naming_series_key": key,
         "cost_center": cost_center,
         "accounting_dimension": accounting_dimension,
+        "project": project,
+        "due_date": due_date,
         "doc": doc}
 
+    doc_data['is_opening'] = 'Yes' if is_opening == '1' else 'No'
 
     if booking_type == 'Ausgangsrechnung':
         update_invoice(doc_data)
@@ -350,3 +393,33 @@ def generate_journal_entries(user,acc_soll,voucher_id,voucher_date,acc_haben,val
 
         entry_account = create_journal_entry_account(doc_data)
         create_journal_entry(doc_data, entry_account)
+
+def get_account_total_amount(account, fiscal_year):
+    sel = """
+            select
+                name, account, posting_date, fiscal_year, credit, debit
+            from
+                `tabGL Entry`
+            where
+                account = '{account}'
+                and fiscal_year = '{fiscal_year}'
+                and posting_date <= CURRENT_TIMESTAMP()
+            """.format(account = account, fiscal_year=fiscal_year)
+
+    entries = frappe.db.sql(sel, as_dict=1)
+    return entries
+
+@frappe.whitelist()
+def calc_account_total_amount(account, fiscal_year):
+
+    acc_total = 0
+    if account:
+        if not fiscal_year:
+            fiscal_year = datetime.now().year
+        entries = get_account_total_amount(account, fiscal_year)
+
+        for entry in entries:
+            acc_total += entry.get('debit')
+            acc_total -= entry.get('credit')
+
+    return {'value': frappe.format_value(acc_total, {'fieldtype': 'Currency'})}
