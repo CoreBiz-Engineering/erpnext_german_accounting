@@ -70,9 +70,14 @@ german_accounting/german_accounting/report/op_list/__init__.py
 german_accounting/german_accounting/report/op_list/op_list.js
 german_accounting/german_accounting/report/op_list/op_list.json
 german_accounting/german_accounting/report/op_list/op_list.py
+german_accounting/german_accounting/report/summen_und_salden_(susa)/__init__.py
+german_accounting/german_accounting/report/summen_und_salden_(susa)/summen_und_salden_(susa).js
+german_accounting/german_accounting/report/summen_und_salden_(susa)/summen_und_salden_(susa).json
+german_accounting/german_accounting/report/summen_und_salden_(susa)/summen_und_salden_(susa).py
 german_accounting/german_accounting/report/umsatzsteuer_voranmeldung/__init__.py
 german_accounting/german_accounting/report/umsatzsteuer_voranmeldung/umsatzsteuer_voranmeldung.js
 german_accounting/german_accounting/report/umsatzsteuer_voranmeldung/umsatzsteuer_voranmeldung.json
 german_accounting/german_accounting/report/umsatzsteuer_voranmeldung/umsatzsteuer_voranmeldung.py
 german_accounting/templates/__init__.py
 german_accounting/templates/pages/__init__.py
+german_accounting/translations/de.csv
