@@ -86,6 +86,10 @@ def create_journal_entry_account(data):
     for elem in data:
         if elem in ['acc_soll', 'acc_haben', 'acc_tax_vs', 'acc_tax_us']:
             # create hash for naming in DB without naming_series
+            if elem in ['acc_tax_vs', 'acc_tax_us'] and data.get('acc_tax_vs') is None and data.get('acc_tax_us') is None:
+                # skip if no tax account is given f.e. 0% tax
+                continue
+
             hash = make_autoname(key='hash', doctype='Journal Entry', doc=data.get('doc'))
             credit = 0.00
             debit = 0.00
@@ -154,7 +158,7 @@ def create_journal_entry_account(data):
                         a_account = data.get('acc_soll')+', '+data.get('acc_haben')
                         idx = 2
             idx = len(journal_entry_account) + 1
-            values = {'debit_in_account_currency': debit, 'credit_in_account_currency': credit, 'account': account,
+            values = {'debit_in_account_currency': debit, 'debit': debit, 'credit_in_account_currency': credit, 'credit':credit, 'account': account,
                       'a_account': a_account, 'idx': 1}
 
             account_information = frappe.get_value('Account', account,
@@ -179,11 +183,28 @@ def create_journal_entry_account(data):
             #'party_type': 'Supplier', 'party': 'LC-LI71002'
             if data.get('cost_center'):
                 values['cost_center'] = data.get('cost_center')
+                # j
             if data.get('accounting_dimension') and account_information.get('report_type') == 'Profit and Loss':
                 values['kostentraeger'] = data.get('accounting_dimension')
                 values['idx'] = 2
             if data.get('project') and account_information.get('report_type') == 'Profit and Loss':
                 values['project'] = data.get('project')
+                values['idx'] = 2
+            if data.get('service_contract') and account_information.get('report_type') == 'Profit and Loss':
+                values['service_contract'] = data.get('service_contract')
+                values['idx'] = 2
+            if data.get('rental_service_contract') and account_information.get('report_type') == 'Profit and Loss':
+                values['rental_service_contract'] = data.get('rental_service_contract')
+                values['idx'] = 2
+            if data.get('maintenance_contract') and account_information.get('report_type') == 'Profit and Loss':
+                values['maintenance_contract'] = data.get('maintenance_contract')
+                values['idx'] = 2
+            if data.get('maintenance_contract_various') and account_information.get('report_type') == 'Profit and Loss':
+                values['maintenance_contract_various'] = data.get('maintenance_contract_various')
+                values['idx'] = 2
+            if data.get('cloud_and_hosting_contract') and account_information.get('report_type') == 'Profit and Loss':
+                values['cloud_and_hosting_contract'] = data.get('cloud_and_hosting_contract')
+                values['idx'] = 2
 
             journal_entry_account.append(values)
 
@@ -200,16 +221,16 @@ def get_tax_code_data(data):
         data['acc_tax_us'] = tax_data.get('account_ust')
     if data.get('tax_kind') == "VS" or tax_data.get('tax_code') in ['326', '118']:
         data['acc_tax_vs'] = tax_data.get('account_vst')
-
-    for tax in ['acc_tax_us', 'acc_tax_vs']:
-        if data.get(tax):
-            try:
-                tax_account = (
-                    frappe.get_value('Account', filters={"account_number": data.get(tax)}, as_dict=1)).get(
-                    'name')
-                data[tax] = tax_account
-            except:
-                data[tax] = ''
+    if tax_data.get('tax_rate'):
+        for tax in ['acc_tax_us', 'acc_tax_vs']:
+            if data.get(tax):
+                try:
+                    tax_account = (
+                        frappe.get_value('Account', filters={"account_number": data.get(tax)}, as_dict=1)).get(
+                        'name')
+                    data[tax] = tax_account
+                except:
+                    data[tax] = ''
 
     return data
 
@@ -256,11 +277,14 @@ def create_journal_entry(data, entry_account):
         'user_remark':data.get('posting_text'),
         'accounts': entry_account
     })
+    for entry in journal_entry.accounts:
+        print(entry.debit, entry.credit)
 
     if data.get('due_date'):
         journal_entry.set('due_date', data.get('due_date'))
 
     journal_entry.insert()
+
     #journal_entry.submit()
     #journal_entry.save()
     return
@@ -342,7 +366,8 @@ def change_event_value(value, tax_kind, tax_code):
 @frappe.whitelist()
 def generate_journal_entries(user, acc_soll,voucher_id, voucher_date, acc_haben, value, tax_kind, tax_code,
                              country_code, tax_value, posting_text, fiscal_year, voucher_netto_value, booking_type,
-                             is_opening, cost_center, accounting_dimension, project, due_date):
+                             is_opening, cost_center, accounting_dimension, project, due_date, service_contract,
+                             rental_service_contract, maintenance_contract, maintenance_contract_various, cloud_and_hosting_contract):
     #get the metadata from doctype
     doc = frappe.get_meta('Journal Entry')
 
@@ -354,6 +379,12 @@ def generate_journal_entries(user, acc_soll,voucher_id, voucher_date, acc_haben,
     if due_date:
         due_date = datetime.strptime(due_date, '%d.%m.%Y').strftime('%Y-%m-%d')
     #map data from Frontend
+    if "," in value:
+        value = value.replace('.', '').replace(',', '.')
+    if "," in voucher_netto_value:
+        voucher_netto_value = voucher_netto_value.replace('.', '').replace(',', '.')
+    if "," in tax_value:
+        tax_value = tax_value.replace('.', '').replace(',', '.')
     doc_data = {
         "name": naming_series,
         "user": user,
@@ -361,7 +392,7 @@ def generate_journal_entries(user, acc_soll,voucher_id, voucher_date, acc_haben,
         "voucher_id": voucher_id,
         "voucher_date": voucher_date,
         "acc_haben": acc_haben,
-        "value":value.replace('.','').replace(',','.'),
+        "value":value,
         "tax_kind":tax_kind,
         "tax_code": tax_code,
         "company": company,
@@ -375,6 +406,11 @@ def generate_journal_entries(user, acc_soll,voucher_id, voucher_date, acc_haben,
         "accounting_dimension": accounting_dimension,
         "project": project,
         "due_date": due_date,
+        "service_contract": service_contract,
+        "rental_service_contract": rental_service_contract,
+        "maintenance_contract": maintenance_contract,
+        "maintenance_contract_various": maintenance_contract_various,
+        "cloud_and_hosting_contract": cloud_and_hosting_contract,
         "doc": doc}
 
     doc_data['is_opening'] = 'Yes' if is_opening == '1' else 'No'
@@ -392,7 +428,9 @@ def generate_journal_entries(user, acc_soll,voucher_id, voucher_date, acc_haben,
             doc_data = get_tax_code_data(doc_data)
 
         entry_account = create_journal_entry_account(doc_data)
+
         create_journal_entry(doc_data, entry_account)
+    return {"generated": 1}
 
 def get_account_total_amount(account, fiscal_year):
     sel = """

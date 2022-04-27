@@ -1,5 +1,7 @@
 {
+ "actions": [],
  "allow_import": 1,
+ "autoname": "field:number",
  "creation": "2020-05-07 09:36:37.261064",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -12,15 +14,18 @@
   {
    "fieldname": "number",
    "fieldtype": "Data",
-   "label": "Nummer"
+   "label": "Nummer",
+   "unique": 1
   },
   {
    "fieldname": "desription",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Beschreibung"
   }
  ],
- "modified": "2020-05-11 09:30:40.546041",
+ "links": [],
+ "modified": "2022-02-11 11:52:17.168500",
  "modified_by": "Administrator",
  "module": "German Accounting",
  "name": "Kostentraeger",
@@ -64,6 +69,7 @@
   }
  ],
  "quick_entry": 1,
+ "search_fields": "number, desription",
  "sort_field": "modified",
  "sort_order": "DESC",
  "track_changes": 1

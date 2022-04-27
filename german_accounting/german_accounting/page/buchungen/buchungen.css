@@ -131,3 +131,33 @@
     padding: 10px;
     display: inline-block;
 }
+
+.service_contract {
+    width: 15%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.rental_service_contract {
+    width: 15%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.maintenance_contract {
+    width: 15%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.maintenance_contract_various {
+    width: 15%;
+    padding: 10px;
+    display: inline-block;
+}
+
+.cloud_and_hosting_contract {
+    width: 15%;
+    padding: 10px;
+    display: inline-block;
+}

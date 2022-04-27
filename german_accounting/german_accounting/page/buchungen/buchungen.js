@@ -37,9 +37,19 @@ frappe.pages['buchungen'].refresh = function(wrapper){
                     accounting_dimension: acc.accounting_dimension.get_input_value(),
                     project: acc.project.get_input_value(),
                     due_date: acc.due_date.get_input_value(),
+                    service_contract: acc.service_contract.get_input_value(),
+                    rental_service_contract: acc.rental_service_contract.get_input_value(),
+                    maintenance_contract: acc.maintenance_contract.get_input_value(),
+                    maintenance_contract_various: acc.maintenance_contract_various.get_input_value(),
+                    cloud_and_hosting_contract: acc.cloud_and_hosting_contract.get_input_value(),
+                },
+                callback: function(r) {
+                    var res = r.message;
+                    if (res.generated == 1) {
+                        frappe.ui.toolbar.clear_cache();
+                    }
                 }
             })
-            //frappe.ui.toolbar.clear_cache();
         } else {
             alert("Fehlende Felder")
         }
@@ -141,38 +151,29 @@ class Account {
     make_dom() {
         this.wrapper.append(`
             <div class="account_wrapper">
-                <div class="booking_type">
-                </div>
-                <div class="is_opening">
-                </div><br>
-                <div class="account_soll"> 
-                </div>
-                <div class="voucher_id">
-                </div>
-                <div class="voucher_date">
-                </div>
-                <div class="due_date">
-                </div>
-                <div class="soll_total">
-                </div>
-                <div class="soll_s_h">
-                </div>
-                <div class="account_haben">
-                </div>
-                <div class="voucher_value">
-                </div>
-                <div class="voucher_netto_value">
-                </div>
-                <div class="haben_total">
-                </div>
-                <div class="fiscal_year">
-                </div>
-                <div class="cost_center">
-                </div>
-                <div class="accounting_dimension">
-                </div>
-                <div class="project"
-                </div>
+                <div class="booking_type"></div>
+                <div class="is_opening"></div>
+                <br>
+                <div class="account_soll"></div>
+                <div class="voucher_id"></div>
+                <div class="voucher_date"></div>
+                <div class="due_date"></div>
+                <div class="soll_total"></div>
+                <div class="soll_s_h"></div>
+                <div class="account_haben"></div>
+                <div class="voucher_value"></div>
+                <div class="voucher_netto_value"></div>
+                <div class="haben_total"></div>
+                <div class="fiscal_year"></div>
+                <div class="cost_center"></div>
+                <div class="accounting_dimension"></div>
+                <div class="project"></div>
+                <br>
+                <div class="service_contract"></div>
+                <div class="rental_service_contract"></div>
+                <div class="maintenance_contract"></div>
+                <div class="maintenance_contract_various"></div>
+                <div class="cloud_and_hosting_contract"></div>
             </div>
         `);
     }
@@ -378,6 +379,58 @@ class Account {
                 options: 'Project',
             },
             parent: this.wrapper.find('.project'),
+            render_input: true
+        });
+
+        this.service_contract = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Link',
+                label: "Service Contract",
+                field_name: "service_contract",
+                options: "Service Contract",
+            },
+            parent: this.wrapper.find('.service_contract'),
+            render_input: true
+        })
+
+        this.rental_service_contract = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Link',
+                label: 'Mietvertrage',
+                field_name: 'rental_service_contract',
+                options: 'Rental Server Contract',
+            },
+            parent: this.wrapper.find('.rental_service_contract'),
+            render_input: true
+        });
+        this.maintenance_contract = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Link',
+                label: __('Wartungsvertrag'),
+                field_name: 'maintenance_contract',
+                options: 'Maintenance Contract',
+            },
+            parent: this.wrapper.find('.maintenance_contract'),
+            render_input: true
+        });
+        this.maintenance_contract_various = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Link',
+                label: __('Wartungsvertrag Divers'),
+                field_name: 'maintenance_contract_various',
+                options: 'Maintenance Contract Various',
+            },
+            parent: this.wrapper.find('.maintenance_contract_various'),
+            render_input: true
+        });
+        this.cloud_and_hosting_contract = frappe.ui.form.make_control({
+            df: {
+                fieldtype: 'Link',
+                label: __('Cloud und Hostingvertrag'),
+                field_name: 'cloud_and_hosting_contract',
+                options: 'Cloud And Hosting Contract',
+            },
+            parent: this.wrapper.find('.cloud_and_hosting_contract'),
             render_input: true
         });
     }

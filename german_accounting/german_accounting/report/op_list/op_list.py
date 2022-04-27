@@ -59,6 +59,7 @@ class ReceivableSumCustomerReport(object):
 				"label": _("Check"),
 				"fieldname": "check",
 				"fieldtype": "Data",
+				"width": "60px",
 			},
 			{
 				"label": _("Account"),
@@ -69,12 +70,14 @@ class ReceivableSumCustomerReport(object):
 				"label": _("Customer Name"),
 				"fieldname": "customer_name",
 				"fieldtype": "Data",
+				"width": "50px",
 			},
 			{
 				"label": _("Voucher No"),
 				"fieldname": "sales_invoice",
 				"fieldtype": "Link",
-				"options": "Sales Invoice"
+				"options": "Sales Invoice",
+				"width": "100px",
 			},
 			{
 				"label": _("Journal Entry"),
@@ -85,42 +88,50 @@ class ReceivableSumCustomerReport(object):
 			{
 				"label": _("Voucher No"),
 				"fieldname": "cheque_no",
-				"fieldtype": "Data"
+				"fieldtype": "Data",
+				"width": "75px",
 			},
 			{
-				"label": _("Posting Date"),
+				"label": "B. Datum",
 				"fieldname": "posting_date",
-				"fieldtype": "Data",
+				"fieldtype": "Date",
+				"width": "75px",
 			},
 			{
-				"label": _("Due Date"),
+				"label": "F&auml;lligkeit",
 				"fieldname": "due_date",
-				"fieldtype": "Data",
+				"fieldtype": "Date",
+				"width": "75px",
 			},
 			{
-				"label": _("Over Due"),
+				"label": "&Uuml;berf&auml;llig",
 				"fieldname": "over_due",
 				"fieldtype": "Data",
+				"width": "60px",
 			},
 			{
 				"label": _("Invoiced Amount"),
 				"fieldname": "invoiced_amount",
 				"fieldtype": "Currency",
+				"width": "75px",
 			},
 			{
 				"label": _("Payment Amount"),
 				"fieldname": "payment_amount",
 				"fieldtype": "Currency",
+				"width": "75px",
 			},
 			{
 				"label": _("Paid Amount"),
 				"fieldname": "paid_amount",
 				"fieldtype": "Currency",
+				"width": "75px",
 			},
 			{
 				"label": _("Outstanding Amount"),
 				"fieldname": "outstanding_amount",
 				"fieldtype": "Currency",
+				"width": "75px",
 			}
 		]
 
@@ -130,16 +141,17 @@ class ReceivableSumCustomerReport(object):
 				"label": _("Check"),
 				"fieldname": "check",
 				"fieldtype": "Data",
+				"width": "50px",
 			},{
 				"label": _("Account"),
 				"fieldname": "account",
 				"fieldtype": "Data",
-				"width": 150
+				"width": "100px",
 			},{
 				"label": _("Against Account"),
 				"fieldname": "against",
 				"fieldtype": "Data",
-				"width": 150
+				"width": "75px",
 			},{
 				"label": _("Supplier Name"),
 				"fieldname": "supplier_name",
@@ -148,28 +160,41 @@ class ReceivableSumCustomerReport(object):
 				"label": _("Remark"),
 				"fieldname": "remark",
 				"fieldtype": "Data",
-				"width": 250
+				"width": 150,
 			},{
 				"label": _("Voucher"),
 				"fieldname": "voucher",
 				"fieldtype": "Link",
-				"options": "Journal Entry"
+				"options": "Journal Entry",
+				"width": "130px",
+			},{
+				"label": _("Voucher No"),
+				"fieldname": "cheque_no",
+				"fieldtype": "Data",
+				"width": "75px",
 			},{
 				"label": _("Posting Date"),
 				"fieldname": "posting_date",
 				"fieldtype": "Date",
+				"width": "75px",
 			},{
-				"label": _("Value"),
-				"fieldname": "value",
+				"label": _("Soll"),
+				"fieldname": "soll",
+				"fieldtype": "Currency",
+			},{
+				"label": _("Haben"),
+				"fieldname": "haben",
 				"fieldtype": "Currency",
 			},{
 				"label": _("Paid Amount"),
 				"fieldname": "paid_amount",
 				"fieldtype": "Currency",
+				"width": "75px",
 			},{
 				"label": _("Outstanding Amount"),
 				"fieldname": "outstanding_amount",
 				"fieldtype": "Currency",
+				"width": "75px",
 			}]
 
 	def get_data(self):
@@ -181,31 +206,7 @@ class ReceivableSumCustomerReport(object):
 			self.get_columns_supplier()
 
 	def get_supplier_data(self):
-		sql =	"""
-				select
-					gl.name,
-					gl.voucher_no,
-					gl.posting_date,
-					gl.party_type,
-					gl.remarks,
-					gl.against_voucher_type,
-					gl.account,
-					gl.against,
-					gl.against_voucher,
-					gl.credit_in_account_currency,
-					gl.party,
-					s.supplier_name
-				from
-					`tabGL Entry` gl,
-					`tabSupplier` s 
-				where
-					gl.party_type = 'Supplier'
-					and gl.against_voucher_type is NULL
-					and gl.against_voucher is NULL
-					and s.name = gl.party
-					and (select count(*) from `tabGL Entry` gl2 where gl2.against_voucher = gl.voucher_no) = 0
-				"""
-		#self.gl_entries = frappe.db.sql(sql, as_dict=1)
+
 		self.gl_entries = self.select_journal_entry_data(self.filters.get('party_type'))
 		self.data = []
 		order_count = 1
@@ -224,9 +225,23 @@ class ReceivableSumCustomerReport(object):
 													where jea.reference_name = '%s'
 													and jea.docstatus = 1""" % gl_entry.get('voucher_no')
 					payed_list = frappe.db.sql(sql, as_dict=1)
+
+					sql = """
+								select
+									sum(gl.debit) as sum
+								from
+									`tabGL Entry` gl
+								where
+									gl.against_voucher = '%s'
+							""" % gl_entry.get('voucher_no')
+					payed_list.append(frappe.db.sql(sql, as_dict=1)[0])
+					payed_val = 0
 					if payed_list:
 						# calculate the oustanding value
-						payed_val = payed_list[0].get('sum')
+						for sum in payed_list:
+							if sum.get('sum'):
+								payed_val = sum.get('sum')
+						# payed_val = payed_list[0].get('sum')
 						outstanding_val = gl_entry.get('credit_in_account_currency') - (payed_val or 0)
 						outstanding_total += (outstanding_val or 0)
 						paid_total += (payed_val or 0)
@@ -248,8 +263,10 @@ class ReceivableSumCustomerReport(object):
 						'remark': gl_entry.get('remarks'),
 						'supplier': gl_entry.get('supplier'),
 						'supplier_name': gl_entry.get('supplier_name'),
+						'cheque_no': gl_entry.get('cheque_no'),
 						'voucher': gl_entry.get('voucher_no'),
-						'value': gl_entry.get('credit_in_account_currency'),
+						'soll': gl_entry.get('debit_in_account_currency'),
+						'haben':gl_entry.get('credit_in_account_currency'),
 						'paid_amount': (payed_val or 0),
 						'outstanding_amount': (outstanding_val or 0)
 					}
@@ -275,7 +292,8 @@ class ReceivableSumCustomerReport(object):
 		elif party_type in ['Supplier','Lieferant']:
 			table = '`tabSupplier` s'
 			attr = 's.supplier_name'
-			debit_credit = 'and gl.credit > 0.00'
+			# debit_credit = 'and gl.credit > 0.00'
+			debit_credit = ''
 			p_type = 'Supplier'
 			party = 'gl.credit'
 
@@ -303,8 +321,8 @@ class ReceivableSumCustomerReport(object):
 						WHEN (select sum(per.allocated_amount)
 								from `tabPayment Entry Reference` per
 								where per.reference_name = gl.voucher_no
-								and per.docstatus = 1) is NULL THEN gl.debit
-						ELSE gl.debit - (select sum(per.allocated_amount)
+								and per.docstatus = 1) is NULL THEN {party}
+						ELSE {party} - (select sum(per.allocated_amount)
 											from `tabPayment Entry Reference` per
 											where per.reference_name = gl.voucher_no
 											and per.docstatus = 1)
@@ -317,22 +335,20 @@ class ReceivableSumCustomerReport(object):
 				where
 					gl.party_type = '{party_type}'
 					and gl.voucher_no = jl.name
-					and gl.against_voucher_type is NULL
 					and gl.against_voucher is NULL
 					and s.name = gl.party
 					and ((select count(*) from `tabGL Entry` gl2 where gl2.against_voucher = gl.voucher_no) = 0 
-					or (select sum(jea.credit) from `tabJournal Entry Account` jea where jea.reference_name = gl.voucher_no and jea.docstatus = 1) < gl.debit)
+					or (select sum(jea.credit) from `tabJournal Entry Account` jea where jea.reference_name = gl.voucher_no and jea.docstatus = 1) < {party}
+					or (select sum(pe.total_allocated_amount) as sum from `tabPayment Entry` pe where pe.docstatus = 1 and pe.reference_no = gl.voucher_no) < {party})
 					{party_filter}
 					{debit_credit}
+				order by
+					gl.account
 				""".format(table=table, party_type=p_type, attr=attr, party_filter=party_filter,
 						   debit_credit=debit_credit, party=party)
-
 		return frappe.db.sql(sql, as_dict=1)
 
 	def get_sales_inovice_data(self):
-		'''
-		TODO shorten this method
-		'''
 		'''
 		{'company': 'LIS Consulting GmbH', 'ageing_based_on': 'Posting Date', 'report_date': datetime.date(2020, 5, 14),
 		'customer': 'FirmaTest2', 'party_type': 'Customer', 'naming_by': ['Selling Settings', 'cust_master_name']}
@@ -346,7 +362,8 @@ class ReceivableSumCustomerReport(object):
 				select name, customer, customer_name, posting_date, due_date, po_no, debit_to,
 					datediff(due_date, curdate()) as over_due, grand_total, outstanding_amount 
 				from `tabSales Invoice` 
-				where due_date <= curdate() and status = 'Overdue' and outstanding_amount > 0 {0}""".format(customer_filter)
+				where due_date <= curdate() and status in ('Overdue', 'Unpaid') and outstanding_amount > 0 {0}
+				order by debit_to""".format(customer_filter)
 
 		self.invoice_entries = frappe.db.sql(sql,as_dict=1)
 		self.journal_entries = self.select_journal_entry_data(self.filters.get('party_type'))
@@ -380,7 +397,7 @@ class ReceivableSumCustomerReport(object):
 
 					dunning = {	'posting_date': sales_invoice.get('posting_date'),
 									'order_count': order_count,
-								  	'check': '<input value={0} type="checkbox">'.format(sales_invoice.get('name')),
+									'check': '<input value={0} type="checkbox">'.format(sales_invoice.get('name')),
 									'account': account,
 									'customer': sales_invoice.get('customer'),
 									'customer_name': sales_invoice.get('customer_name'),
@@ -388,7 +405,7 @@ class ReceivableSumCustomerReport(object):
 									'due_date': sales_invoice.get('due_date'),
 									'over_due': sales_invoice.get('over_due'),
 									'invoiced_amount': sales_invoice.get('grand_total'),
-								   	'payment_amount': 0,
+									'payment_amount': 0,
 									'paid_amount': sales_invoice.get('grand_total') - sales_invoice.get('outstanding_amount'),
 									'outstanding_amount': sales_invoice.get('outstanding_amount')}
 
@@ -635,7 +652,7 @@ def get_skonto_account(account_no):
 	return frappe.db.sql(sql, as_dict=1)[0].get('name')
 
 @frappe.whitelist()
-def create_payment(voucher_list,party_type,bank, value, posting_date, skonto):
+def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, remark):
 
 	voucher_list = json.loads(voucher_list)
 	company = frappe.db.get_single_value("Global Defaults", "default_company")
@@ -645,11 +662,12 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto):
 		for voucher in voucher_list:
 			if frappe.db.exists("Sales Invoice", voucher):
 				invoice = frappe.get_doc("Sales Invoice", voucher)
-				if value:
+				# the value now needs typecast compare because a string 0 returned true...
+				if float(value):
 					debit_value = value
 				else:
 					debit_value = invoice.outstanding_amount
-				if skonto:
+				if float(skonto):
 					skonto_account = get_skonto_account('8736') #default 19%
 					skonto_value = invoice.outstanding_amount - float(value)
 					if invoice.taxes:
@@ -684,26 +702,50 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto):
 									 ]
 					})
 					journal_entry.insert()
-				journal_entry = frappe.get_doc({
-					'doctype': 'Journal Entry',
-					'voucher_type': 'Bank Entry',
-					'posting_date': posting_date,
-					'cheque_no': invoice.name,
-					'cheque_date': posting_date,
-					'accounts': [{'account': invoice.debit_to,
-								  'party_type': 'Customer',
-								  'party': invoice.customer,
-								  'reference_type': 'Sales Invoice',
-								  'reference_name': invoice.name,
-								  'credit_in_account_currency': debit_value},
-								 {'account': bank,
-								  'debit_in_account_currency': debit_value}]
-				})
-				journal_entry.insert()
+				elif debit_value < 0:
+					frappe.logger().debug("IN ELIF")
+					value = value * (-1)
+					journal_entry = frappe.get_doc({
+						'doctype': 'Journal Entry',
+						'voucher_type': 'Credit Note',
+						'posting_date': posting_date,
+						'cheque_no': invoice.name,
+						'cheque_date': posting_date,
+						'accounts': [
+							{'account': invoice.debit_to,
+							'party_type': 'Customer',
+							'party': invoice.customer,
+							 'reference_name': invoice.name,
+							 'debit_in_account_currency': value},
+							{'account': bank,
+							 'credit_in_account_currency': value
+							}
+						]
+					})
+					pass
+				else:
+					frappe.logger().debug("IN ELse")
+					journal_entry = frappe.get_doc({
+						'doctype': 'Journal Entry',
+						'voucher_type': 'Bank Entry',
+						'posting_date': posting_date,
+						'cheque_no': invoice.name,
+						'user_remark': remark,
+						'cheque_date': posting_date,
+						'accounts': [{'account': invoice.debit_to,
+									  'party_type': 'Customer',
+									  'party': invoice.customer,
+									  'reference_type': 'Sales Invoice',
+									  'reference_name': invoice.name,
+									  'credit_in_account_currency': debit_value},
+									 {'account': bank,
+									  'debit_in_account_currency': debit_value}]
+					})
+					journal_entry.insert()
 			elif frappe.db.exists('GL Entry', voucher):
 				gl_entry = frappe.get_doc('GL Entry', voucher)
 				customer = frappe.get_doc('Customer', gl_entry.party)
-				if value:
+				if float(value):
 					debit_value = value
 				else:
 					debit_value = gl_entry.debit
@@ -713,7 +755,9 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto):
 						'voucher_type': 'Bank Entry',
 						'posting_date': posting_date,
 						'cheque_no': gl_entry.voucher_no,
+						'user_remark': remark,
 						'cheque_date': posting_date,
+						'user_remark': remark,
 						'accounts': [{'account': gl_entry.account,
 									  'party_type': 'Customer',
 									  'party': gl_entry.party,
@@ -731,13 +775,14 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto):
 						'base_paid_amount': gl_entry.credit,
 						'party_type': 'Customer',
 						'title': gl_entry.party,
+						'posting_date': posting_date,
 						'base_total_allocated_amount': gl_entry.credit,
 						'paid_to': gl_entry.get('account'),
 						'reference_no': gl_entry.voucher_no,
 						'party_name': customer.customer_name,
 						'paid_to_account_currency': 'EUR',
 						'party': gl_entry.party,
-						'reference_date': frappe.utils.nowdate(),
+						'reference_date': posting_date, #frappe.utils.nowdate(),
 						'total_allocated_amount': gl_entry.credit,
 						'paid_from': bank,
 						'received_amount': gl_entry.credit,
@@ -754,28 +799,39 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto):
 		for voucher in voucher_list:
 			gl_entry = frappe.get_doc('GL Entry', voucher)
 			supplier = frappe.get_doc('Supplier', gl_entry.party)
+			bank_account = frappe.get_all('Bank Account', filters={'account': bank})[0]
+			if float(value):
+				credit_value = float(value)
+			else:
+				credit_value = gl_entry.credit
+			# frappe.logger().debug("gl_entry.credit: %s - value: %s" % (gl_entry.credit, value))
 			payment = frappe.get_doc({
 				'doctype': 'Payment Entry',
 				'payment_type': 'Pay',
-				'base_paid_amount': gl_entry.credit,
+				'base_paid_amount': credit_value,
 				'party_type': 'Supplier',
 				'title': gl_entry.party,
-				'base_total_allocated_amount': gl_entry.credit,
+				'posting_date': posting_date,
+				'base_total_allocated_amount': credit_value,
 				'paid_to': gl_entry.get('account'),
 				'reference_no': gl_entry.voucher_no,
 				'party_name': supplier.supplier_name,
 				'paid_to_account_currency': 'EUR',
 				'party': gl_entry.party,
-				'reference_date': frappe.utils.nowdate(),
-				'total_allocated_amount': gl_entry.credit,
+				'bank_account': bank_account.name,
+				'bank': bank_account.account_name,
+				'bank_account_no': bank_account.bank_account_no,
+				'reference_date': posting_date, #frappe.utils.nowdate(),
+				'total_allocated_amount': credit_value,
 				'paid_from': bank,
-				'received_amount': gl_entry.credit,
-				'paid_amount': gl_entry.credit,
+				'received_amount': credit_value,
+				'paid_amount': credit_value,
+				'remarks': remark,
 				'references': [{'reference_doctype': 'Journal Entry',
 								'reference_name': gl_entry.voucher_no,
 								'total_amount': gl_entry.credit,
 								'outstanding_amount': gl_entry.credit,
-								'allocated_amount': gl_entry.credit}]
+								'allocated_amount': credit_value}]
 			})
 			payment.insert()
 		#payment.submit()

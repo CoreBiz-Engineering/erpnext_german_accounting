@@ -7,6 +7,7 @@ Provide a report for the german Umsatzsteuervoranmeldung
 
 from __future__ import unicode_literals
 import json
+from datetime import datetime
 from six import string_types
 import frappe
 from frappe import _
@@ -14,6 +15,7 @@ from frappe import _
 def execute(filters=None):
     """Entry point for frappe."""
     result = {}
+    print("FILTERS: ", filters)
     validate_filters(filters)
     if filters.get('view') == 'Kontenansicht':
         result = get_kontenansicht(filters)
@@ -26,7 +28,6 @@ def execute(filters=None):
 
     return columns, result
 
-
 def validate_filters(filters):
     """Make sure all mandatory filters are present."""
     if not filters.get('company'):
@@ -37,7 +38,6 @@ def validate_filters(filters):
 
     if not filters.get('to_date'):
         frappe.throw(_('{0} is mandatory').format(_('To Date')))
-
 
 def get_columns():
     """Return the list of columns that will be shown in query report."""
@@ -90,9 +90,9 @@ def get_columns():
 
     return columns
 
-
 def get_mark_header(gl_entries):
-    #TODO: create this as a DocType for better maintenance
+    # TODO: create this as a DocType for better maintenance
+    # key = Kennzeichen; value = Beschreibung
     header = {  "41": "Innergemeinschaftliche Lieferung (§ 4 Nr. 1 Buchst. b UStG) an Abnehmer mit USt-IdNr.",
                 "44": "Innergemeinschaftliche Lieferungen neuer Fahrzeuge an Abnehmer ohne USt-IdNr.",
                 "43": "Weitere steuerfreie Umsätze mit Vorsteuerabzug (z. B. Ausfuhrlieferungen Umsätze nach § 4 Nr. 2 bis 7 UStG)",
@@ -135,7 +135,6 @@ def get_mark_header(gl_entries):
                         'account_name': header.get(entry.get('mark'))})
             marks_list.append(entry.get('mark'))
     return res
-
 
 def get_gl_entries(filters):
     query = """
@@ -225,7 +224,7 @@ def calc_group_sum(gl_entries):
     for mark in gl_entries:
         if mark.get('mark') not in mark_list:
             mark_list.append(mark.get('mark'))
-
+    print(mark_list)
     res = []
     tax_res = 0
     for mark in mark_list:
@@ -237,8 +236,7 @@ def calc_group_sum(gl_entries):
                 row = account.get('row')
                 # check if tax_rate is given
                 tax = get_right_tax(account)
-
-                if account.get('mark') == account.get('tax_mark') or mark in ['21','81']:
+                if account.get('mark') == account.get('tax_mark') or mark in ['81']:
                     sum += account.get('root_account_value')
                     tax_sum += account.get('root_account_value') * tax
                     tax_res += account.get('root_account_value') * tax
@@ -268,7 +266,7 @@ def calc_group_sum(gl_entries):
                     'tax_value': round(sum, 2)
                 }
             )
-            tax_res -= round(sum, 2)*(-1)
+            tax_res += round(sum, 2)
         else:
             res.append(
                 {
@@ -276,11 +274,15 @@ def calc_group_sum(gl_entries):
                     's_h': s_h,
                     'sort': str(row)+'.1',
                     'account_number': 'Summe',
-                    'account_value': round(sum,2),
+                    'account_value': int(sum), # round to 0 because of the of the origin report
                     'tax_value': round(tax_sum,2)
                 }
             )
     if res:
+        # aktuell wird Vorsteuer minus Umsatzsteuer gerechnet
+        # korrekt wird aber Umsatzsteuer minus Vorsteuer gerechnet
+        # wird aktuell duch Vorzeichenkorrektur behoben
+        tax_res = tax_res * (-1)
         res.append(
             {
                 'row': '66',
@@ -294,8 +296,55 @@ def calc_group_sum(gl_entries):
 
 def get_kontenansicht(filters):
     "Function to get the detailed-view of all accounts from the ustva"
+    to_date = datetime.strptime(filters.get('to_date'), "%Y-%m-%d").date()
     res = []
     gl_entries = get_gl_entries(filters)
+    # 1781 kann vor Dezember gebucht werden, darf jedoch nur im Dezember angezeigt werden
+    # deswegen die Überprüfung
+    if to_date.month < 12:
+        gl_entries = [entry for entry in gl_entries if not (entry['account_number'] == '1781')]
+    elif to_date.month == 12:
+        account_numbers = []
+        for entry in gl_entries:
+            account_numbers.append(entry.get('account_number'))
+
+        if '1781' not in account_numbers:
+            sql =   """
+                    select
+                        acc.account_number,
+                        acc.tax_rate,
+                        acc.account_type,
+                        gl.account as account_name,
+                        sum(gl.debit) as debit,
+                        sum(gl.credit) as credit
+                    from
+                        `tabGL Entry` gl,
+                        `tabAccount` acc,
+                        `tabUStVA` ust
+                    where
+                        gl.account = acc.name
+                        and acc.account_number = ust.account_number
+                        and gl.fiscal_year = '{year}'
+                        and acc.account_number = '1781'
+                    group by
+                        gl.account,
+                        acc.account_number
+                    """.format(year=to_date.year)
+
+            acc_1781 = frappe.db.sql(sql, as_dict=1)
+            for elem in acc_1781:
+                elem['root_account_value'] = round(elem.get('debit') - elem.get('credit'), 2)
+                sum = round(elem.get('debit') - elem.get('credit'), 2)
+                if sum < 0:
+                    elem['s_h'] = 'H'
+                    elem['account_value'] = elem.get('root_account_value') * (-1)
+                elif sum > 0:
+                    elem['s_h'] = 'S'
+                    elem['account_value'] = elem.get('root_account_value')
+                else:
+                    elem['s_h'] = ''
+            if acc_1781:
+                gl_entries += acc_1781
     account_settings = get_account_settings(gl_entries)
 
     for account in gl_entries:
@@ -310,12 +359,14 @@ def get_kontenansicht(filters):
     res += group_sum
 
     for entry in gl_entries:
-
         tax = get_right_tax(entry)
 
-        if entry.get('tax') or entry.get('tax_mark'):
-            entry['tax_value'] = round(entry.get('account_value') * tax,2)
-            print ('entry: ', entry)
+        if (entry.get('tax') or entry.get('tax_mark')) and entry.get('account_value'):
+            try:
+                entry['tax_value'] = round(entry.get('account_value') * tax,2)
+            except:
+                print('##################### ERROR #####################')
+                print(entry)
         if entry.get('mark') == entry.get('tax_mark'):
             entry.pop('account_value')
             entry.pop('mark')

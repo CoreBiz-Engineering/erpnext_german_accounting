@@ -103,6 +103,12 @@ frappe.query_reports["OP List"] = {
             on_change: function() {}
         },
         {
+            "label": __("Buchungstext"),
+            "fieldname": "remark",
+            "fieldtype": "Data",
+            on_change: function() {}
+        },
+        {
             "label": __("Skonto"),
             "fieldname": "skonto",
             "fieldtype": "Check",
@@ -148,6 +154,7 @@ frappe.query_reports["OP List"] = {
                     value: frappe.query_report.get_filter_value('vlaue'),
                     posting_date: frappe.query_report.get_filter_value('posting_date'),
                     skonto: frappe.query_report.get_filter_value('skonto'),
+                    remark: frappe.query_report.get_filter_value('remark'),
                 },
                 callback: function() {
                     frappe.query_report.refresh()
