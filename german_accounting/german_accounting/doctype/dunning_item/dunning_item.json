@@ -8,67 +8,98 @@
  "field_order": [
   "sales_invoice",
   "dunning_stage",
+  "column_break_3",
   "due_date",
   "overdue_days",
   "section_break_5",
   "posting_date",
   "column_break_7",
   "invoice_total",
-  "outstanding_amount"
+  "outstanding_amount",
+  "section_break_11",
+  "page_break"
  ],
  "fields": [
   {
    "fieldname": "sales_invoice",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Sales Invoice",
    "options": "Sales Invoice"
   },
   {
    "fieldname": "dunning_stage",
    "fieldtype": "Int",
+   "in_list_view": 1,
    "label": "Dunning Stage"
   },
   {
+   "fetch_from": "sales_invoice.due_date",
    "fieldname": "due_date",
-   "fieldtype": "Data",
-   "label": "Due Date"
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Due Date",
+   "read_only": 1
   },
   {
    "fieldname": "overdue_days",
    "fieldtype": "Int",
-   "label": "Overdue Days"
+   "in_list_view": 1,
+   "label": "Overdue Days",
+   "read_only": 1
   },
   {
    "fieldname": "section_break_5",
    "fieldtype": "Section Break"
   },
   {
+   "fetch_from": "sales_invoice.posting_date",
    "fieldname": "posting_date",
    "fieldtype": "Date",
-   "label": "Posting Date"
+   "label": "Posting Date",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_7",
    "fieldtype": "Column Break"
   },
   {
+   "fetch_from": "sales_invoice.grand_total",
    "fieldname": "invoice_total",
    "fieldtype": "Currency",
-   "label": "Invoice Total"
+   "in_list_view": 1,
+   "label": "Invoice Total",
+   "read_only": 1
   },
   {
+   "fetch_from": "sales_invoice.outstanding_amount",
    "fieldname": "outstanding_amount",
    "fieldtype": "Currency",
-   "label": "Outstanding Amount"
+   "label": "Outstanding Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_11",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "page_break",
+   "fieldtype": "Check",
+   "label": "Page Break"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-02-02 11:32:30.753916",
+ "modified": "2022-09-06 10:47:17.254737",
  "modified_by": "Administrator",
  "module": "German Accounting",
- "name": "Dunning Items",
+ "name": "Dunning Item",
  "owner": "Administrator",
  "permissions": [],
  "sort_field": "modified",

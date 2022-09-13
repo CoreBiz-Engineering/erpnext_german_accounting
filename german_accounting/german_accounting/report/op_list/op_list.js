@@ -48,6 +48,11 @@ frappe.query_reports["OP List"] = {
             },
             on_change: function() {
                 var party_type = frappe.query_report.get_filter_value('party_type');
+                if (party_type === "Customer" || party_type === "Kunde") {
+                    party_type = "Customer";
+                } else {
+                    party_type = "Supplier";
+                }
                 var parties = frappe.query_report.get_filter_value('party');
 
                 if(!party_type || parties.length === 0 || parties.length > 1) {
@@ -114,10 +119,70 @@ frappe.query_reports["OP List"] = {
             "fieldtype": "Check",
             on_change: function() {}
         },
+        {
+            "label": __("Verrechnen"),
+            "fieldname": "allocate",
+            "fieldtype": "Check",
+            on_change: function() {}
+        },
+        {
+            "label": __("Gewählte Summe"),
+            "fieldname": "select_total",
+            "fieldtype": "Currency",
+            "default": 0,
+            "read_only": 1,
+            on_change: function() {}
+        },
+        {
+            "label": __("Datei hochladen"),
+            "fieldname": "attach",
+            "fieldtype": "Attach",
+            on_change: function () {
+                $("div[data-fieldname='attach']").addClass('col-md-4').removeClass('col-md-2');
+                if (frappe.query_report.get_filter_value('attach')) {
+                    $("button[data-label='Create%20Payment']").hide();
+                    $("button[data-label='Create%20Dunning']").hide();
+                    $("button[data-label='Bankabgleich']").show();
+                } else {
+                    $("button[data-label='Bankabgleich']").hide();
+                    $("button[data-label='Create%20Payment']").show();
+                    $("button[data-label='Create%20Dunning']").show();
+                }
+
+
+            }
+        },
     ],
     onload: function(report) {
         // not the peferct but fastest way
         //$('div[class="container page-body"]').width('95%')
+        frappe.query_report.page.add_inner_button(__("Bankabgleich"), function() {
+            var selected_rows = [];
+            //collect all checked checkboxes
+            $('.dt-scrollable').find(":input[type=checkbox]").each((idx, row) => {
+                if(row.checked){
+                    console.log("*** selected row id : " + (idx), frappe.query_report.data[idx].voucher_no);
+                    var data = frappe.query_report.data[idx]
+                    selected_rows.push({
+                        "voucher_no": data.sales_invoice,
+                        "posting_date": data.bank_posting_date,
+                        "id": data.id,
+                        "bank": frappe.query_report.get_filter_value('bank'),
+                        "remark": frappe.query_report.get_filter_value('remark')
+                    });
+                }
+            });
+            console.log("xxx", selected_rows);
+            frappe.call({
+                method: "german_accounting.german_accounting.report.op_list.bank_file_reader.reconcile_bank",
+                args: {
+                    invoice_list: selected_rows
+                },
+                callback: function (r){
+                    console.log("returned");
+                }
+            })
+        }).hide();
         frappe.query_report.page.add_inner_button(__("Create Dunning"), function() {
             var selected_rows = [];
             //collect all checked checkboxesi
@@ -141,7 +206,7 @@ frappe.query_reports["OP List"] = {
             //collect all checked checkboxes
             $('.dt-scrollable').find(":input[type=checkbox]").each((idx, row) => {
                 if(row.checked){
-                    selected_rows.push(row.value);
+                    selected_rows.push(frappe.query_report.data[idx].voucher_no);
                 }
             });
             //send invoices to backend for creating payment:
@@ -155,11 +220,33 @@ frappe.query_reports["OP List"] = {
                     posting_date: frappe.query_report.get_filter_value('posting_date'),
                     skonto: frappe.query_report.get_filter_value('skonto'),
                     remark: frappe.query_report.get_filter_value('remark'),
+                    allocate: frappe.query_report.get_filter_value('allocate'),
                 },
                 callback: function() {
-                    frappe.query_report.refresh()
+                    $('.dt-scrollable').find(":input[type=checkbox]").prop("checked", false);
+                    $('div.dt-row--highlight').removeClass('dt-row--highlight');
+                    $('span.dt-toast__message').remove();
+                    frappe.query_report.set_filter_value("select_total", 0);
                 }
             });
+        });
+    },
+    get_datatable_options(options) {
+        return Object.assign(options, {
+            checkboxColumn: true,
+            events: {
+                onCheckRow: function (data) {
+                    console.log(frappe.query_report.get_filter_value("select_total"));
+                    total_checked = 0
+                    $('.dt-scrollable').find(":input[type=checkbox]").each((idx, row) => {
+                        if(row.checked) {
+                            total_checked += frappe.query_report.data[idx].outstanding_amount
+                        }
+                    });
+                    $('span.dt-toast__message').remove();
+                    frappe.query_report.set_filter_value("select_total", total_checked);
+                },
+            }
         });
     }
 };

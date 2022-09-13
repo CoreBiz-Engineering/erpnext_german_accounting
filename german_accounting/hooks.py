@@ -26,7 +26,9 @@ app_license = "MIT"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Dunning" : "public/js/dunning.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -118,7 +120,11 @@ fixtures = ["Steuercodes", "UStVA", "BWA", "BWA Kurzbericht"]
 
 # Overriding Methods
 # ------------------------------
-#
+jenv = {
+    "methods": [
+        "get_last_bank_entry:german_accounting.german_accounting.doctype.custom.custom.get_last_bank_entry",
+    ]
+}
 # override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "german_accounting.event.get_events"
 # }
