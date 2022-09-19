@@ -357,10 +357,6 @@ class ReceivableSumCustomerReport(object):
 		return frappe.db.sql(sql, as_dict=1)
 
 	def get_sales_inovice_data(self):
-		'''
-		{'company': 'LIS Consulting GmbH', 'ageing_based_on': 'Posting Date', 'report_date': datetime.date(2020, 5, 14),
-		'customer': 'FirmaTest2', 'party_type': 'Customer', 'naming_by': ['Selling Settings', 'cust_master_name']}
-		'''
 		customer_filter = ''
 		if self.filters.get('party'):
 			customer_list = "'" + "','".join(self.filters.get('party')) + "'"
@@ -465,8 +461,6 @@ class ReceivableSumCustomerReport(object):
 					old_dunnings = self.get_old_dunnings(sales_invoice.get('name'))
 					if old_dunnings:
 						dunning.update(old_dunnings)
-					if account == "21005":
-						print(dunning)
 					self.data.append(dunning)
 
 			for journal_entry in self.journal_entries:
@@ -734,7 +728,6 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 					journal_entry.posting_date = posting_date
 
 					if total_credit <= 0:
-						print("Left the Loop in break")
 						break
 					if frappe.db.exists("Sales Invoice", voucher):
 						invoice = frappe.get_doc("Sales Invoice", voucher)
@@ -746,10 +739,8 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 						total_credit = return_reconciliation(journal_entry, c_note, gl_entry, total_credit, value, bank)
 			return
 		else:
-			print("IN ELSE")
 			for voucher in voucher_list:
 				if frappe.db.exists("Sales Invoice", voucher):
-					print("IN INVOICE")
 					invoice = frappe.get_doc("Sales Invoice", voucher)
 					# the value now needs typecast compare because a string 0 returned true...
 					if float(value):
@@ -792,7 +783,6 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 						})
 						journal_entry.insert()
 					elif debit_value < 0:
-						print("IN ELIF")
 						value = value * (-1)
 						journal_entry = frappe.get_doc({
 							'doctype': 'Journal Entry',
@@ -812,8 +802,6 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 							]
 						})
 					elif debit_value > invoice.outstanding_amount:
-						print("IN VALUE > OUTSTANDING AMOUNT")
-
 						payment = frappe.get_doc({
 							'doctype': 'Payment Entry',
 							'title': invoice.customer,
@@ -840,10 +828,7 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 						row.outstanding_amount = row.allocated_amount = invoice.outstanding_amount
 
 						payment.insert()
-						print("PAYMENT SAVED")
-
 					else:
-						print("IN ELse")
 						journal_entry = frappe.get_doc({
 							'doctype': 'Journal Entry',
 							'voucher_type': 'Bank Entry',
@@ -943,7 +928,6 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 				elif frappe.db.exists('Payment Entry', voucher):
 					payment = frappe.get_doc("Payment Entry", voucher)
 					if payment.unallocated_amount > 0:
-						print("UNALLOCATED AMAOUNT:", payment.unallocated_amount)
 						# create jounral entry:
 						journal_entry = frappe.get_doc({"doctype": "Journal Entry"})
 						journal_entry.voucher_type = "Bank Entry"
@@ -960,7 +944,6 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 						credit.credit_in_account_currency = payment.unallocated_amount
 						journal_entry.save()
 						journal_entry.submit()
-						print("JOURNAL ENTRY SAVED")
 
 						reconcile = frappe.get_doc("Payment Reconciliation")
 						reconcile.company = frappe.defaults.get_user_default("Company")
@@ -985,7 +968,7 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 						allo.unreconciled_amount = unreconciled_amount
 						reconcile.reconcile()
 					else:
-						print("SOMETHING DIFFERENT")
+						pass
 
 	elif party_type == 'Supplier' or party_type == 'Lieferant':
 		for voucher in voucher_list:

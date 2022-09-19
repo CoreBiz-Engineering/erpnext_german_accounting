@@ -17,237 +17,119 @@ from erpnext.accounts.doctype.invoice_discounting.invoice_discounting import get
 
 
 
-def create_gl_entry(data, values):
+def create_journal_entry(args):
+    j_entry = frappe.new_doc("Journal Entry")
 
-    hash = make_autoname(key='hash', doctype='Journal Entry', doc=data.get('doc'))
+    debit_account = frappe.get_doc('Account', args.acc_soll)
+    credit_account = frappe.get_doc('Account', args.acc_haben)
+    tax_account = frappe.get_doc('Account', args.tax)
 
-    gl_entry = frappe.get_doc({
-        'doctype': 'GL Entry',
-    })
-    sql =   """
-            insert into `tabGL Entry` (
-                name,
-                creation,
-                modified,
-                modified_by,
-                owner,
-                docstatus,
-                debit_in_account_currency,
-                credit_in_account_currency,
-                cost_center,
-                account,
-                is_advance,
-                fiscal_year,
-                voucher_type,
-                company,
-                debit,
-                voucher_no,
-                against,
-                account_currency,
-                remarks,
-                credit,
-                posting_date
-            ) values (
-                "{hash}",
-                CURRENT_TIMESTAMP(),
-                CURRENT_TIMESTAMP(),
-                "{modified_by}",
-                "{owner}",
-                1,
-                {debit},
-                {credit},
-                "{cost_center}",
-                "{account}",
-                "No",
-                {fiscal_year},
-                "Journal Entry",
-                "{company}",
-                {debit},
-                "{voucher_no}",
-                "{a_account}",
-                "EUR",
-                "{posting_text}",
-                {credit},
-                STR_TO_DATE("{posting_date}","%Y-%m-%d") 
-            )
-            """.format(naming_series=data.get('name'), modified_by=data.get('user'), owner=data.get('user'),
-                       debit=values.get('debit'), credit=values.get('credit'), a_account=values.get('a_account'),
-                       account=values.get('account'), hash=hash, cost_center="Haupt - LISen",
-                       posting_text=data.get('posting_text'), posting_date=data.get('voucher_date')[:10],
-                       fiscal_year=data.get('fiscal_year'), company=data.get('company'), voucher_no=data.get('name'))
+    if 'Kreditorenkonten' in debit_account.parent_account or 'Debitorenkonten' in debit_account.parent_account:
+        party_account_name = frappe.get_value("Party Account", filters={"account": debit_account.name})
+        party_account = frappe.get_doc("Party Account", party_account_name)
+        create_journal_entry_account(j_entry, debit_account, debit=args.value, party_type=party_account.parenttype, party=party_account.parent, args=args)
+        create_journal_entry_account(j_entry, credit_account, credit=args.voucher_netto_value)
+        create_journal_entry_account(j_entry, tax_account, credit=args.tax_value)
+    else:
+        party_account_name = frappe.get_value("Party Account", filters={"account": credit_account.name})
+        party_account = frappe.get_doc("Party Account", party_account_name)
+        create_journal_entry_account(j_entry, credit_account, credit=args.value, party_type=party_account.parenttype, party=party_account.parent, args=args)
+        create_journal_entry_account(j_entry, debit_account, debit=args.voucher_netto_value)
+        create_journal_entry_account(j_entry, tax_account, debit=args.tax_value)
 
-    frappe.db.sql(sql)
+    if len(j_entry.accounts) <= 1:
+        frappe.msg_print("Ups, hier ist etwas schief gegangen.\nBuchung beinhaltet nur eine Buchungszeile!")
+        return
 
-    return
+    j_entry.voucher_type = "Journal Entry"
+    j_entry.posting_date = args.voucher_date
+    j_entry.cheque_no = args.voucher_id
+    j_entry.cheque_date = args.voucher_date
+    j_entry.is_opening = "Yes" if args.is_opening else "No"
+    j_entry.user_remark = args.posting_text
+    j_entry.bill_no = args.voucher_id
+    j_entry.bill_date = args.voucher_date
 
-def create_journal_entry_account(data):
+    dimension_list = frappe.get_list("Accounting Dimension", fields=["name", "fieldname"])
+    dimension_list.append({"name": "Project", "fieldname": "project"})
 
-    journal_entry_account = []
-    for elem in data:
-        if elem in ['acc_soll', 'acc_haben', 'acc_tax_vs', 'acc_tax_us']:
-            # create hash for naming in DB without naming_series
-            if elem in ['acc_tax_vs', 'acc_tax_us'] and data.get('acc_tax_vs') is None and data.get('acc_tax_us') is None:
-                # skip if no tax account is given f.e. 0% tax
-                continue
+    j_entry.save()
 
-            hash = make_autoname(key='hash', doctype='Journal Entry', doc=data.get('doc'))
-            credit = 0.00
-            debit = 0.00
-            idx = 0
-            account = ''
-            a_account = ''
-            #setting params
-            if data.get('tax_code')[:3] in ['326', '118']:
-                if elem == 'acc_tax_vs':
-                    debit = data.get('tax_value')
-                    account = data.get('acc_tax_vs')
-                    a_account = data.get('acc_haben')
-                elif elem == 'acc_tax_us':
-                    credit = data.get('tax_value')
-                    account = data.get('acc_tax_us')
-                    a_account = data.get('acc_haben')
-                elif elem == 'acc_haben':
-                    credit = data.get('value')
-                    account = data.get(elem)
-                    a_account = data.get('acc_soll')+', '+data.get('acc_haben')
-                elif elem == 'acc_soll':
-                    debit = data.get('value')
-                    account = data.get(elem)
-                    a_account = data.get('acc_haben')
-            else:
-                if data.get('tax_kind') == 'US':
-                    if elem == 'acc_soll':
-                        debit = data.get('value')
-                        account = data.get(elem)
-                        a_account = data.get('acc_haben')
-                        idx = 1
-                    elif elem == 'acc_haben':
-                        credit = data.get('debit_value')
-                        account = data.get(elem)
-                        a_account = data.get('acc_soll')+', '+data.get('acc_haben')
-                        idx = 3
-                    elif elem == 'acc_tax_us':
-                        credit = data.get('tax_value')
-                        account = data.get('acc_tax_us')
-                        a_account = data.get('acc_haben')
-                        idx = 2
-                elif data.get('tax_kind') == 'VS':
-                    if elem == 'acc_soll':
-                        debit = data.get('debit_value')
-                        account = data.get(elem)
-                        a_account = data.get('acc_haben')
-                    elif elem == 'acc_haben':
-                        credit = data.get('value')
-                        account = data.get(elem)
-                        a_account = data.get('acc_soll')+', '+data.get('acc_haben')
-                        idx = 3
-                    elif elem == 'acc_tax_vs':
-                        debit = data.get('tax_value')
-                        account = data.get('acc_tax_vs')
-                        a_account = data.get('acc_haben')
-                        idx = 2
-                elif data.get('tax_kind') == '0':
-                    if elem == 'acc_soll':
-                        debit = data.get('value')
-                        account = data.get(elem)
-                        a_account = data.get('acc_haben')
-                        idx = 1
-                    elif elem == 'acc_haben':
-                        credit = data.get('value')
-                        account = data.get(elem)
-                        a_account = data.get('acc_soll')+', '+data.get('acc_haben')
-                        idx = 2
-            idx = len(journal_entry_account) + 1
-            values = {'debit_in_account_currency': debit, 'debit': debit, 'credit_in_account_currency': credit, 'credit':credit, 'account': account,
-                      'a_account': a_account, 'idx': 1}
 
-            account_information = frappe.get_value('Account', account,
-                                                   ['name', 'parent_account', 'account_number', 'report_type'], as_dict=1)
+def create_journal_entry_account(j_entry, account, debit=0, credit=0, party_type="", party="", args={}):
+    row = j_entry.append("accounts", {})
+    row.account = account.name
 
-            if 'Kreditorenkonten' in account_information.get('parent_account'):
-                sql = '''select name from `tabSupplier` 
-                                            where name like "%{acc_no}"'''.format(
-                    acc_no=account_information.get('account_number'))
+    if party_type:
+        row.party_type = party_type
+        row.party = party
+    if debit:
+        row.debit_in_account_currency = debit
+        row.debit = debit
+    if credit:
+        row.credit_in_account_currency = credit
+        row.credit = credit
 
-                supplier = frappe.db.sql(sql, as_dict=1)[0]
-                values['party_type'] = 'Supplier'
-                values['party'] = supplier.get('name')
-            elif 'Debitorenkonten' in account_information.get('parent_account'):
-                sql = '''select name from `tabCustomer` 
-                            where name like "%{acc_no}"'''.format(acc_no=account_information.get('account_number'))
-                customer = frappe.db.sql(sql, as_dict=1)[0]
-                values['party_type'] = 'Customer'
-                values['party'] = customer.get('name')
+    if args:
+        dimension_list = frappe.get_list("Accounting Dimension", fields=["name", "fieldname"])
+        dimension_list.append({"name": "Project", "fieldname": "project"})
+        for dimension in dimension_list:
+            if args.get(dimension.get("fieldname")):
+                get_accounting_dimension(row, dimension.get("fieldname"), args.get(dimension.get("fieldname")))
 
-            #'parent_account': 'Kreditorenkonten - L
-            #'party_type': 'Supplier', 'party': 'LC-LI71002'
-            if data.get('cost_center'):
-                values['cost_center'] = data.get('cost_center')
-                # j
-            if data.get('accounting_dimension') and account_information.get('report_type') == 'Profit and Loss':
-                values['kostentraeger'] = data.get('accounting_dimension')
-                values['idx'] = 2
-            if data.get('project') and account_information.get('report_type') == 'Profit and Loss':
-                values['project'] = data.get('project')
-                values['idx'] = 2
-            if data.get('service_contract') and account_information.get('report_type') == 'Profit and Loss':
-                values['service_contract'] = data.get('service_contract')
-                values['idx'] = 2
-            if data.get('rental_service_contract') and account_information.get('report_type') == 'Profit and Loss':
-                values['rental_service_contract'] = data.get('rental_service_contract')
-                values['idx'] = 2
-            if data.get('maintenance_contract') and account_information.get('report_type') == 'Profit and Loss':
-                values['maintenance_contract'] = data.get('maintenance_contract')
-                values['idx'] = 2
-            if data.get('maintenance_contract_various') and account_information.get('report_type') == 'Profit and Loss':
-                values['maintenance_contract_various'] = data.get('maintenance_contract_various')
-                values['idx'] = 2
-            if data.get('cloud_and_hosting_contract') and account_information.get('report_type') == 'Profit and Loss':
-                values['cloud_and_hosting_contract'] = data.get('cloud_and_hosting_contract')
-                values['idx'] = 2
+    return row
 
-            journal_entry_account.append(values)
 
-    return(journal_entry_account)
+def get_accounting_dimension(row, dimension, dimension_name):
+    if dimension == "service_contract":
+        row.service_contract = dimension_name
+    if dimension == "maintenance_contract":
+        row.maintenance_contract = dimension_name
+    if dimension == "maintenance_contract_various":
+        row.maintenance_contract_various = dimension_name
+    if dimension == "rental_server_contract":
+        row.rental_server_contract = dimension_name
+    if dimension == "cloud_and_hosting_contract":
+        row.cloud_and_hosting_contract = dimension_name
+    if dimension == "kostentraeger":
+        row.kostentraeger = dimension_name
+    if dimension == "project":
+        row.project = dimension_name
+    return row
 
-def get_tax_code_data(data):
-    #get taxinformation from db-doctype
-    tax_data = frappe.get_value('Steuercodes', data.get('tax_code'),
+
+def get_tax_code_data(args):
+    # get taxinformation from db-doctype
+    tax_data = frappe.get_value('Steuercodes', args.tax_code,
                                 ['title', 'tax_code', 'account_ust', 'account_vst', 'tax_rate'],
                                 as_dict=1)
 
-    data['tax_rate'] = tax_data.get('tax_rate')
-    if data.get('tax_kind') == "US" or tax_data.get('tax_code') in ['326', '118']:
-        data['acc_tax_us'] = tax_data.get('account_ust')
-    if data.get('tax_kind') == "VS" or tax_data.get('tax_code') in ['326', '118']:
-        data['acc_tax_vs'] = tax_data.get('account_vst')
+    args.tax_rate = tax_data.get('tax_rate')
+    if args.tax_kind == "US" or tax_data.get('tax_code') in ['326', '118']:
+        args.acc_tax_us = tax_data.get('account_ust')
+    if args.tax_kind == "VS" or tax_data.get('tax_code') in ['326', '118']:
+        args.acc_tax_vs = tax_data.get('account_vst')
     if tax_data.get('tax_rate'):
+        args.tax = ""
         for tax in ['acc_tax_us', 'acc_tax_vs']:
-            if data.get(tax):
-                try:
-                    tax_account = (
-                        frappe.get_value('Account', filters={"account_number": data.get(tax)}, as_dict=1)).get(
+            if args.get(tax):
+                tax_account = (
+                        frappe.get_value('Account', filters={"account_number": args.get(tax)}, as_dict=1)).get(
                         'name')
-                    data[tax] = tax_account
-                except:
-                    data[tax] = ''
+                args.tax = tax_account
+    return args
 
-    return data
 
 def calc_account_values(tax_data):
-    """
-    calculate the tax-, debit and credit value
-    """
-
+    # calculate the tax-, debit and credit value
+    debit_value = 0.00
+    tax_value = 0.00
     if tax_data.get('tax_rate') is None:
         debit_value = float(tax_data.get('value'))
-        tax_value = 0.00
     elif tax_data.get('tax_code')[:3] in ['326', '118']:
         tax_value = round(float(tax_data.get('value')) * (float(tax_data.get('tax_rate'))/100), 2)
         debit_value = float(tax_data.get('value'))
-        pass
     elif float(tax_data.get('tax_rate')) != 0.00:
-
         debit_value = round((float(tax_data.get('value')) / (1+float(tax_data.get('tax_rate'))/100)), 2)
         tax_value = float(tax_data.get('value')) - debit_value
         # tax_value = round(float(tax_data.get('value')) * (float(tax_data.get('tax_rate'))/100),2)
@@ -258,97 +140,16 @@ def calc_account_values(tax_data):
 
     return tax_data
 
-def create_journal_entry(data, entry_account):
-
-    journal_entry = frappe.get_doc({
-        'doctype': 'Journal Entry',
-        'voucher_type':'Journal Entry',
-        'modified_by':data.get('user'),
-        'company':data.get('company'),
-        'total_debit':data.get('value'),
-        'total_credit':data.get('value'),
-        'remark':data.get('posting_text'),
-        'cheque_no':data.get('voucher_id'),
-        'is_opening': data.get('is_opening'),
-        'bill_no':data.get('voucher_id'),
-        'posting_date': data.get('voucher_date'),
-        'bill_date':data.get('voucher_date'),
-        'cheque_date':data.get('voucher_date'),
-        'user_remark':data.get('posting_text'),
-        'accounts': entry_account
-    })
-    for entry in journal_entry.accounts:
-        print(entry.debit, entry.credit)
-
-    if data.get('due_date'):
-        journal_entry.set('due_date', data.get('due_date'))
-
-    journal_entry.insert()
-
-    #journal_entry.submit()
-    #journal_entry.save()
-    return
-
-def update_invoice(doc_data):
-
-    invoice = {}
-
-    if len(doc_data.get('voucher_id')) == 14:
-        invoice = frappe.get_doc("Sales Invoice",doc_data.get('voucher_id'))
-    else:
-        sql =   '''
-                select name, naming_series
-                from tabSales Order
-                where name like "%{voucher_no}"
-                '''.format(voucher_no=doc_data.get('voucher_id'))
-        frappe.db.sql(sql)
-
-    if invoice:
-        if invoice.status == 'Paid':
-            return
-        #'Payment Entry Reference'
-        #
-        #Reference No and Reference Date is mandatory for Bank transaction
-        #'''
-        else:
-            payment = frappe.get_doc({
-                'doctype': 'Payment Entry',
-                'payment_type': 'Receive',
-                'base_paid_amount': invoice.outstanding_amount,
-                'party_type': 'Customer',
-                'title': invoice.customer,
-                'base_total_allocated_amount': doc_data.get('value'),
-                'paid_to': doc_data.get('acc_soll'),
-                'reference_no': invoice.name,
-                'party_name': invoice.customer,
-                'paid_to_account_currency': 'EUR',
-                'party': invoice.customer,
-                'reference_date': doc_data.get('voucher_date'),
-                'total_allocated_amount': '',
-                'paid_from': doc_data.get('acc_haben'),
-                'received_amount': doc_data.get('value'),
-                'paid_amount': doc_data.get('value'),
-                'company': invoice.company,
-                'kostentraeger': invoice.kostentraeger,
-                'references': [{'reference_doctype': 'Sales Invoice',
-                                'reference_name': invoice.name,
-                                'due_date': invoice.due_date,
-                                'bill_no': invoice.name,
-                                'total_amount': invoice.grand_total,
-                                'outstanding_amount': invoice.outstanding_amount,
-                                'allocated_amount': doc_data.get('value')}]
-                })
-            #insert Eintrag
-            payment.insert()
-            #submit Eintrag
-            payment.submit()
 
 @frappe.whitelist()
 def change_event_value(value, tax_kind, tax_code):
 
-    data = {'value': value.replace('.', '').replace(',', '.'),
+    data = frappe._dict(
+        {
+            'value': value.replace('.', '').replace(',', '.'),
             'tax_kind': tax_kind,
-            'tax_code': tax_code}
+            'tax_code': tax_code
+        })
 
     # fuer EG-Buchungen, die VS und US Konten buchen und Netto = Brutto ist
     if tax_code[:3] in ['326', '118']:
@@ -363,74 +164,34 @@ def change_event_value(value, tax_kind, tax_code):
     else:
         return
 
+
 @frappe.whitelist()
-def generate_journal_entries(user, acc_soll,voucher_id, voucher_date, acc_haben, value, tax_kind, tax_code,
-                             country_code, tax_value, posting_text, fiscal_year, voucher_netto_value, booking_type,
-                             is_opening, cost_center, accounting_dimension, project, due_date, service_contract,
-                             rental_service_contract, maintenance_contract, maintenance_contract_various, cloud_and_hosting_contract):
-    #get the metadata from doctype
-    doc = frappe.get_meta('Journal Entry')
+def generate_journal_entries(**args):
+    args = frappe._dict(args)
 
-    # generate autokey depending on "naming_series":
-    key = 'ACC-JV-.YYYY.-'
-    naming_series = make_autoname(key=key, doctype='Journal Entry', doc=doc)
-    company = frappe.db.get_single_value("Global Defaults", "default_company")
-    voucher_date = datetime.strptime(voucher_date, '%d.%m.%Y').strftime('%Y-%m-%d')
-    if due_date:
-        due_date = datetime.strptime(due_date, '%d.%m.%Y').strftime('%Y-%m-%d')
-    #map data from Frontend
-    if "," in value:
-        value = value.replace('.', '').replace(',', '.')
-    if "," in voucher_netto_value:
-        voucher_netto_value = voucher_netto_value.replace('.', '').replace(',', '.')
-    if "," in tax_value:
-        tax_value = tax_value.replace('.', '').replace(',', '.')
-    doc_data = {
-        "name": naming_series,
-        "user": user,
-        "acc_soll": acc_soll,
-        "voucher_id": voucher_id,
-        "voucher_date": voucher_date,
-        "acc_haben": acc_haben,
-        "value":value,
-        "tax_kind":tax_kind,
-        "tax_code": tax_code,
-        "company": company,
-        "debit_value": voucher_netto_value,
-        "country_code": country_code,
-        "tax_value": tax_value,
-        "posting_text": posting_text,
-        "fiscal_year": fiscal_year,
-        "naming_series_key": key,
-        "cost_center": cost_center,
-        "accounting_dimension": accounting_dimension,
-        "project": project,
-        "due_date": due_date,
-        "service_contract": service_contract,
-        "rental_service_contract": rental_service_contract,
-        "maintenance_contract": maintenance_contract,
-        "maintenance_contract_various": maintenance_contract_various,
-        "cloud_and_hosting_contract": cloud_and_hosting_contract,
-        "doc": doc}
+    args.company = frappe.db.get_single_value("Global Defaults", "default_company")
+    args.voucher_date = datetime.strptime(args.voucher_date, '%d.%m.%Y').strftime('%Y-%m-%d')
+    if args.due_date:
+        args.due_date = datetime.strptime(args.due_date, '%d.%m.%Y').strftime('%Y-%m-%d')
+    # reformat the integer from frontend
+    if "," in args.value:
+        args.value = args.value.replace('.', '').replace(',', '.')
+    if "," in args.voucher_netto_value:
+        args.voucher_netto_value = args.voucher_netto_value.replace('.', '').replace(',', '.')
+    if "," in args.tax_value:
+        args.tax_value = args.tax_value.replace('.', '').replace(',', '.')
 
-    doc_data['is_opening'] = 'Yes' if is_opening == '1' else 'No'
+    # get the tax-account data/name
+    if not args.tax_kind:
+        args.tax_kind = '0'
 
-    if booking_type == 'Ausgangsrechnung':
-        update_invoice(doc_data)
-    else:
-        # get the tax-account data/name
-        if doc_data.get('tax_kind'):
-            pass
-        else:
-            doc_data['tax_kind'] = '0'
+    if args.tax_kind != '0':
+        args = get_tax_code_data(args)
 
-        if doc_data.get('tax_kind') != '0':
-            doc_data = get_tax_code_data(doc_data)
+    create_journal_entry(args)
 
-        entry_account = create_journal_entry_account(doc_data)
+    return
 
-        create_journal_entry(doc_data, entry_account)
-    return {"generated": 1}
 
 def get_account_total_amount(account, fiscal_year):
     sel = """
@@ -442,10 +203,11 @@ def get_account_total_amount(account, fiscal_year):
                 account = '{account}'
                 and fiscal_year = '{fiscal_year}'
                 and posting_date <= CURRENT_TIMESTAMP()
-            """.format(account = account, fiscal_year=fiscal_year)
+            """.format(account=account, fiscal_year=fiscal_year)
 
     entries = frappe.db.sql(sel, as_dict=1)
     return entries
+
 
 @frappe.whitelist()
 def calc_account_total_amount(account, fiscal_year):

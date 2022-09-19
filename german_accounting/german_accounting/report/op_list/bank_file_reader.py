@@ -86,7 +86,7 @@ def read_csv_file(file_url):
 
                 if doc.status == "Paid":
                     continue
-                date = datetime.datetime.strftime(row.get("Buchungstag"), "%Y-%d-%m")
+                date = datetime.datetime.strftime(row.get("Buchungstag"), "%Y-%m-%d")
                 #id = (hashlib.md5((date+"-"+row.get("IBAN Zahlungsbeteiligter")+"-"+doc.name).encode())).hexdigest()
                 id = date + "-" + row.get("IBAN Zahlungsbeteiligter") + "-" + doc.name
                 if not frappe.db.exists("Bank Assignment", id):
@@ -249,7 +249,7 @@ def create_log_entry(id, row, invoice):
     assignment.bank_type = row.get("Buchungstext")
     assignment.iban = row.get("IBAN Zahlungsbeteiligter")
     assignment.purpose_of_use = row.get("Verwendungszweck")
-    assignment.posting_date = datetime.datetime.strftime(row.get("Buchungstag"), "%Y-%d-%m")
+    assignment.posting_date = datetime.datetime.strftime(row.get("Buchungstag"), "%Y-%m-%d")
     assignment.bank_total = row.get("Betrag")
     assignment.insert(ignore_permissions=True)
     frappe.db.commit()

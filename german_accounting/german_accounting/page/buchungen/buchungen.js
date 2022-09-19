@@ -34,20 +34,20 @@ frappe.pages['buchungen'].refresh = function(wrapper){
                     booking_type: acc.booking_type.get_input_value(),
                     is_opening: acc.is_opening.get_input_value(),
                     cost_center: acc.cost_center.get_input_value(),
-                    accounting_dimension: acc.accounting_dimension.get_input_value(),
+                    kostentraeger: acc.accounting_dimension.get_input_value(),
                     project: acc.project.get_input_value(),
                     due_date: acc.due_date.get_input_value(),
                     service_contract: acc.service_contract.get_input_value(),
-                    rental_service_contract: acc.rental_service_contract.get_input_value(),
+                    rental_server_contract: acc.rental_service_contract.get_input_value(),
                     maintenance_contract: acc.maintenance_contract.get_input_value(),
                     maintenance_contract_various: acc.maintenance_contract_various.get_input_value(),
                     cloud_and_hosting_contract: acc.cloud_and_hosting_contract.get_input_value(),
                 },
                 callback: function(r) {
                     var res = r.message;
-                    if (res.generated == 1) {
+                    /*if (res.generated == 1) {
                         frappe.ui.toolbar.clear_cache();
-                    }
+                    }*/
                 }
             })
         } else {
@@ -364,7 +364,7 @@ class Account {
             df: {
                 fieldtype: 'Link',
                 label: 'Kostenträger',
-                fieldname: 'accounting_dimension',
+                fieldname: 'kostentraeger',
                 options: 'Kostentraeger',
             },
             parent: this.wrapper.find('.accounting_dimension'),
@@ -396,8 +396,8 @@ class Account {
         this.rental_service_contract = frappe.ui.form.make_control({
             df: {
                 fieldtype: 'Link',
-                label: 'Mietvertrage',
-                field_name: 'rental_service_contract',
+                label: 'Mietverträge',
+                field_name: 'rental_server_contract',
                 options: 'Rental Server Contract',
             },
             parent: this.wrapper.find('.rental_service_contract'),
