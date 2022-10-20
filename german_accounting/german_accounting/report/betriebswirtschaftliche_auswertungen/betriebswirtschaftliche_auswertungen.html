@@ -1,0 +1,132 @@
+<p><b>Mandat {%= frappe.defaults.get_user_default("Company") %}</b></p>
+<hr>
+<p><b>Betriebswirtschaftliche Auswertung</b></p>
+
+<style>
+    tr.header td {
+        border-bottom: 1px solid black;
+        border-top: 1px solid black;
+        white-space: nowrap;
+    }
+    tr.data td {
+        /*border-spacing: 15px;*/
+        padding-left: 50px;
+    }
+    td.sum {
+        border-top: 1px solid black;
+        text-align: right;
+    }
+</style>
+{% var start_array = filters.from_date.split("-"); %}
+{% var end_array = filters.to_date.split("-"); %}
+{% if(filters.comparison) { %}
+<div class="page-break" style="top: 15mm;">
+    <table style="border-collapse: collapse;">
+        <thead>
+            <tr class="header">
+                <td colspan="2">Buchungskreise: Hauptbuchhaltung</td>
+                <td>AW-Zeitraum:</td>
+
+                <td>{%= start_array[1] %} - {%= end_array[1] %} / {%= start_array[0] %}</td>
+                <td style="border-left: 1px solid black;"></td>
+                <td>AW-Zeitraum:</td>
+                <td>{%= start_array[1] %} - {%= end_array[1] %} / {%= parseInt(start_array[0]) - 1 %}</td>
+                <td style="border-left: 1px solid black;">Kontenabw.%</td>
+                <td style="border-left: 1px solid black;">Abw.%</td>
+            </tr>
+        </thead>
+        <tbody>
+        {% for(var i=0, l=data.length; i<l; i++) { %}
+            {% if(data[i].zeilen_name) { %}
+            <tr>
+                <td colspan="2">{%= data[i].zeilen_name %}</td>
+                <td></td>
+                <td class="sum">{%= format_currency(data[i].subtotal, filters.presentation_currency) %}</td>
+                <td style="border-left: 1px solid black;"></td>
+                <td></td>
+                <td class="sum">
+                        {%= format_currency(data[i].previous_subtotal, filters.presentation_currency) %}
+                </td>
+                <td style="border-left: 1px solid black;"></td>
+                {% if(data[i].in_percentage) { %}
+                    <td style="border-left: 1px solid black; text-align: right;">{%= data[i].in_percentage %}%</td>
+                {% } else { %}
+                    <td style="border-left: 1px solid black;"></td>
+                {% } %}
+            </tr>
+            {% } else { %}
+            <tr class="data">
+                <td style="width: 35px;"></td>
+                <td>
+                    {% if(data[i].account) { %}
+                        {%= data[i].account %} - {%= data[i].name %}
+                    {% } %}
+                </td>
+                {% if(data[i].sum) { %}
+                 <td style="text-align: right;">{%= format_currency(data[i].sum, filters.presentation_currency) %}</td>
+                {% } else { %}
+                    <td></td>
+                {% } %}
+                <td></td>
+                <td style="border-left: 1px solid black;"></td>
+                {% if(data[i].previous_year) { %}
+                    <td style="text-align: right;">{%= format_currency(data[i].previous_year, filters.presentation_currency) %}</td>
+                {% } else { %}
+                    <td></td>
+                {% } %}
+                <td></td>
+                {% if(data[i].in_percentage) { %}
+                    <td style="border-left: 1px solid black; text-align: right;">{%= data[i].in_percentage %}%</td>
+                {% } else { %}
+                    <td style="border-left: 1px solid black;"></td>
+                {% } %}
+                <td style="border-left: 1px solid black;"></td>
+            </tr>
+            {% } %}
+        {% } %}
+        </tbody>
+    </table>
+</div>
+{% } else { %}
+<div class="page-break" style="top: 15mm;">
+    <table style="width: 90%; border-collapse: collapse;">
+        <thead>
+            <tr class="header">
+                <td colspan="2">Buchungskreise: Hauptbuchhaltung</td>
+                <td>AW-Zeitraum:</td>
+                <td>
+                    {%= dateutil.str_to_user(filters.from_date) %}<br>
+                    {%= dateutil.str_to_user(filters.to_date) %}
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+        {% for(var i=0, l=data.length; i<l; i++) { %}
+
+            {% if(data[i].zeilen_name) { %}
+            <tr>
+                <td colspan="2">{%= data[i].zeilen_name %}</td>
+                <td></td>
+                {% if(data[i].subtotal) { %}
+                <td class="sum">{%= format_currency(data[i].subtotal, filters.presentation_currency) %}</td>
+                {% } else { %}
+                <td>{%= format_currency(data[i].sum, filters.presentation_currency) %}</td>
+                {% } %}
+            </tr>
+            {% } else { %}
+            <tr class="data">
+                <td style="width: 35px;"></td>
+                {% if(data[i].name) { %}
+                <td><b>{%= data[i].account %}:</b> {%= data[i].name %}</td>
+                {% } %}
+                {% if(data[i].sum) { %}
+                <td style="text-align:right">{%= format_currency(data[i].sum, filters.presentation_currency) %}</td>
+                {% } %}
+                <td></td>
+            </tr>
+            {% } %}
+        {% } %}
+        </tbody>
+    </table>
+</div>
+{% } %}

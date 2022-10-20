@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-10-20 11:04:45.377043",
+ "description": "Konteneinstellungen, die f\u00fcr den jeweiligen Abschluss gesetzt werden m\u00fcssen.",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "aktivapassiva_section",
+  "activa_passiva_account",
+  "activa_passiva_parent_accounts",
+  "debitor_section",
+  "debitor_account",
+  "debitor_parent_accounts",
+  "kreditor_section",
+  "creditor_account",
+  "creditor_parent_accounts"
+ ],
+ "fields": [
+  {
+   "fieldname": "aktivapassiva_section",
+   "fieldtype": "Section Break",
+   "label": "Aktiva/Passiva"
+  },
+  {
+   "fieldname": "activa_passiva_account",
+   "fieldtype": "Link",
+   "label": "Konto Abschlusskonto",
+   "options": "Account"
+  },
+  {
+   "fieldname": "activa_passiva_parent_accounts",
+   "fieldtype": "Table",
+   "label": "Aktiva/Passiva Hauptkonten",
+   "options": "Annual Financial Statement Setting Accounts"
+  },
+  {
+   "fieldname": "debitor_section",
+   "fieldtype": "Section Break",
+   "label": "Debitor"
+  },
+  {
+   "fieldname": "debitor_account",
+   "fieldtype": "Link",
+   "label": "Debitor Abschlusskonto",
+   "options": "Account"
+  },
+  {
+   "fieldname": "debitor_parent_accounts",
+   "fieldtype": "Table",
+   "label": "Debitor Hauptkonten",
+   "options": "Annual Financial Statement Setting Accounts"
+  },
+  {
+   "fieldname": "kreditor_section",
+   "fieldtype": "Section Break",
+   "label": "Kreditor"
+  },
+  {
+   "fieldname": "creditor_account",
+   "fieldtype": "Link",
+   "label": "Kreditor Abschlusskonto",
+   "options": "Account"
+  },
+  {
+   "fieldname": "creditor_parent_accounts",
+   "fieldtype": "Table",
+   "label": "Kreditor Hauptkonten",
+   "options": "Annual Financial Statement Setting Accounts"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2022-10-20 13:42:15.379907",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "Annual Financial Statement Setting",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

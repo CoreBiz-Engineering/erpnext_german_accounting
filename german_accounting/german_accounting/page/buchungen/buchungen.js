@@ -45,9 +45,9 @@ frappe.pages['buchungen'].refresh = function(wrapper){
                 },
                 callback: function(r) {
                     var res = r.message;
-                    /*if (res.generated == 1) {
+                    if (res.generated == 1) {
                         frappe.ui.toolbar.clear_cache();
-                    }*/
+                    }
                 }
             })
         } else {
@@ -476,7 +476,7 @@ class Tax {
                 fieldtype: 'Select',
                 label: 'Steuerart',
                 fieldname: 'tax_kind',
-                options: ['0','VS','US'],
+                options: ['','0','VS','US'],
                 change: function () {
                     if (tax.tax_kind.get_input_value() == "0"){
                       $("input[data-fieldname='tax_code']").val("");

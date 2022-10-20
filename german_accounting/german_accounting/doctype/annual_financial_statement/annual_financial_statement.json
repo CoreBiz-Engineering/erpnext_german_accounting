@@ -1,0 +1,65 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-10-20 10:57:20.414659",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "annual_report_type",
+  "column_break_2",
+  "fiscal_year",
+  "section_break_4",
+  "create_closing"
+ ],
+ "fields": [
+  {
+   "fieldname": "annual_report_type",
+   "fieldtype": "Select",
+   "label": "Annual Report Type",
+   "options": "\nAktiva/Passiva\nDebitor\nKreditor"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fiscal_year",
+   "fieldtype": "Link",
+   "label": "Fiscal Year",
+   "options": "Fiscal Year"
+  },
+  {
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "create_closing",
+   "fieldtype": "Button",
+   "label": "Create Closing"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2022-10-20 10:57:20.414659",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "Annual Financial Statement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

@@ -185,17 +185,19 @@ frappe.query_reports["OP List"] = {
         }).hide();
         frappe.query_report.page.add_inner_button(__("Create Dunning"), function() {
             var selected_rows = [];
-            //collect all checked checkboxesi
-            $('.dt-scrollable').find(":input[type=checkbox]").each((idx, row) => {
-                if(row.checked){
-                    selected_rows.push(row.value);
+            //collect all checked checkboxes
+            frappe.query_report.datatable.rowmanager.checkMap.forEach((checked, index) => {
+                if(checked) {
+                    selected_rows.push(frappe.query_report.data[index].voucher_no);
                 }
             });
+            console.log(selected_rows);
             //send invoices to backend for creating dunning:
             frappe.call({
                 method: "german_accounting.german_accounting.report.op_list.op_list.create_dunning",
                 args: {
-                    sales_invoices: selected_rows},
+                    sales_invoices: selected_rows
+                },
                 callback: function() {
                     frappe.query_report.refresh()
                 }
@@ -206,7 +208,11 @@ frappe.query_reports["OP List"] = {
             //collect all checked checkboxes
             frappe.query_report.datatable.rowmanager.checkMap.forEach((checked, index) => {
                 if(checked) {
-                    selected_rows.push(frappe.query_report.data[index].voucher_no);
+                    selected_rows.push({
+                        "reference_type": frappe.query_report.data[index].voucher_type_hidden,
+                        "name": frappe.query_report.data[index].voucher_no,
+                        "outstanding_amount": frappe.query_report.data[index].outstanding_amount,
+                    });
                 }
             });
             //send invoices to backend for creating payment:

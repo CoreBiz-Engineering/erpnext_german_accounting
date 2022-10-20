@@ -12,8 +12,166 @@
  "is_default": 0,
  "is_standard": 1,
  "label": "Deutsche Buchhaltung",
- "links": [],
- "modified": "2022-02-15 13:31:40.199352",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_type": "DocType",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "OP-Liste",
+   "link_to": "OP List",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Umsatzsteuer Voranmeldung",
+   "link_to": "Umsatzsteuer Voranmeldung",
+   "link_type": "Report",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Betriebswirtschaftliche Auswertung",
+   "link_to": "Betriebswirtschaftliche Auswertungen",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Summen & Saldenliste",
+   "link_to": "Summen und Salden (SuSa)",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Jahresabschluss & Buchungsmaske",
+   "link_to": "",
+   "link_type": "DocType",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Jahresabschluss",
+   "link_to": "Annual Financial Statement",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Jahresabschluss Log",
+   "link_to": "Annual Financial Statement Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Buchungen (Sage-Maske)",
+   "link_to": "buchungen",
+   "link_type": "Page",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Deutsche Buchhaltung Einstellungen",
+   "link_to": "",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Jahresabschluss Einstellungen",
+   "link_to": "Annual Financial Statement Setting",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Umsatzsteuer Voranmeldung Konten",
+   "link_to": "UStVA",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "BWA Konten",
+   "link_to": "BWA",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "BWA Konten Kurzbericht",
+   "link_to": "BWA Kurzbericht",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Deutsche Steuercodes",
+   "link_to": "Steuercodes",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sonstiges",
+   "link_to": "",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Bankzuordnung (CSV-Import Log)",
+   "link_to": "Bank Assignment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2022-10-20 13:36:11.839155",
  "modified_by": "Administrator",
  "module": "German Accounting",
  "name": "Deutsche Buchhaltung",

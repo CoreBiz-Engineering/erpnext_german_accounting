@@ -1,0 +1,67 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-10-20 11:00:49.581399",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "closing_type",
+  "column_break_2",
+  "posting_date",
+  "account_section",
+  "account_closing_detail"
+ ],
+ "fields": [
+  {
+   "fieldname": "closing_type",
+   "fieldtype": "Data",
+   "label": "Abschlusstyp"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date"
+  },
+  {
+   "fieldname": "account_section",
+   "fieldtype": "Section Break",
+   "label": "Konten"
+  },
+  {
+   "fieldname": "account_closing_detail",
+   "fieldtype": "Table",
+   "label": "Abschlusskonten",
+   "options": "Annual Financial Statement Log Details"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2022-10-20 11:00:49.581399",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "Annual Financial Statement Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "track_views": 1
+}

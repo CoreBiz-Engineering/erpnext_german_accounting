@@ -41,7 +41,8 @@ class ReceivableSumCustomerReport(object):
 		self.filters.update(args)
 		self.set_defaults()
 		self.get_data()
-		data = sorted(self.data, key=lambda k: k['order_count'])
+		data = sorted(self.data, key=lambda k: ("order_count" not in k, k.get("order_count", None), "posting_date" not in k, k.get("posting_date", None)))
+		# data = sorted(self.data, key=lambda k: k['order_count'])
 		self.columns = self.columns + self.dunning_columns
 		return self.columns, data
 
@@ -705,43 +706,68 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 		if bool(int(allocate)):
 			# get the payment-entry:
 			payment = {}
-			c_note = frappe._dict()
+			c_notes = []
+			liabilities = []
+			credit_total = 0
 			for voucher in voucher_list:
-				if frappe.db.exists("Payment Entry", voucher):
-					payment = frappe.get_doc("Payment Entry", voucher)
+				if frappe.db.exists("Payment Entry", voucher.get("name")):
+					payment = frappe.get_doc("Payment Entry", voucher.get("name"))
 					if payment.unallocated_amount > 0:
 						voucher_list.remove(voucher)
 						break
-				elif frappe.db.exists("Sales Invoice", voucher):
-					c_note = frappe.get_doc("Sales Invoice", voucher)
-					if c_note.is_return:
-						voucher_list.remove(voucher)
-						break
+				elif frappe.db.exists("Sales Invoice", voucher.get("name")):
+					invoice = frappe.get_doc("Sales Invoice", voucher.get("name"))
+					if invoice.is_return:
+						c_notes.append(invoice)
+						credit_total += invoice.outstanding_amount
+					else:
+						liabilities.append(invoice)
+				elif frappe.db.exists("GL Entry", voucher.get("name")):
+					j_entry = frappe.get_doc("GL Entry", voucher.get("name"))
+					liabilities.append(j_entry)
 
 			if payment:
 				payment_reconciliation(payment, voucher_list, bank, posting_date, value=value)
-			elif c_note:
-				total_credit = (c_note.outstanding_amount * (-1)) + value
-				for voucher in voucher_list:
+			elif c_notes and len(c_notes) == 1:
+				c_note = c_notes[0]
+				credit_total = (credit_total * (-1)) + value
+				for voucher in liabilities:
 					journal_entry = frappe.get_doc({"doctype": "Journal Entry"})
 					journal_entry.voucher_type = "Credit Note"
 					journal_entry.posting_date = posting_date
-
-					if total_credit <= 0:
+					if credit_total <= 0:
 						break
-					if frappe.db.exists("Sales Invoice", voucher):
-						invoice = frappe.get_doc("Sales Invoice", voucher)
-						invoice = frappe.get_doc("Sales Invoice", voucher)
-						total_credit = return_reconciliation(journal_entry, c_note, invoice, total_credit, value, bank)
-					elif frappe.db.exists("GL Entry", voucher):
-						gl_entry = frappe.get_doc("GL Entry", voucher)
-						gl_entry.outstanding_amount = gl_entry.debit
-						total_credit = return_reconciliation(journal_entry, c_note, gl_entry, total_credit, value, bank)
+					if voucher.doctype == "Sales Invoice":
+						credit_total = return_reconciliation(journal_entry, c_note, voucher, credit_total, value, bank)
+					elif voucher.doctype == "GL Entry":
+						voucher.outstanding_amount = voucher.debit
+						credit_total = return_reconciliation(journal_entry, c_note, voucher, credit_total, value, bank)
+			elif c_notes and len(c_notes) > 1:
+				p_entry = frappe.new_doc("Payment Entry")
+				paid_amount = 0
+				reference_no = ""
+				for c_note in c_notes:
+					paid_amount += c_note.outstanding_amount
+					reference_no += '%s, ' % c_note.name
+					payment_entry_row(p_entry, c_note)
+				for liability in liabilities:
+					paid_amount += liability.outstanding_amount
+					reference_no += '%s, ' % liability.name
+					payment_entry_row(p_entry, liability)
+				p_entry.posting_date = posting_date
+				p_entry.party_type = "Customer"
+				p_entry.party = c_notes[0].customer
+				p_entry.paid_to = bank
+				p_entry.paid_from = c_notes[0].debit_to
+				p_entry.paid_amount = p_entry.received_amount = paid_amount
+				p_entry.reference_no = reference_no
+				p_entry.reference_date = posting_date
+				p_entry.save()
 			return
 		else:
 			for voucher in voucher_list:
-				if frappe.db.exists("Sales Invoice", voucher):
-					invoice = frappe.get_doc("Sales Invoice", voucher)
+				if frappe.db.exists("Sales Invoice", voucher.get("name")):
+					invoice = frappe.get_doc("Sales Invoice", voucher.get("name"))
 					# the value now needs typecast compare because a string 0 returned true...
 					if float(value):
 						debit_value = value
@@ -846,9 +872,9 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 										  'debit_in_account_currency': debit_value}]
 						})
 						journal_entry.insert()
-				elif frappe.db.exists('GL Entry', voucher):
+				elif frappe.db.exists('GL Entry', voucher.get("name")):
 
-					gl_entry = frappe.get_doc('GL Entry', voucher)
+					gl_entry = frappe.get_doc('GL Entry', voucher.get("name"))
 					customer = frappe.get_doc('Customer', gl_entry.party)
 
 					if float(value): debit_value = value
@@ -925,8 +951,8 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 											}]
 						})
 						payment.insert()
-				elif frappe.db.exists('Payment Entry', voucher):
-					payment = frappe.get_doc("Payment Entry", voucher)
+				elif frappe.db.exists('Payment Entry', voucher.get("name")):
+					payment = frappe.get_doc("Payment Entry", voucher.get("name"))
 					if payment.unallocated_amount > 0:
 						# create jounral entry:
 						journal_entry = frappe.get_doc({"doctype": "Journal Entry"})
@@ -972,8 +998,8 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 
 	elif party_type == 'Supplier' or party_type == 'Lieferant':
 		for voucher in voucher_list:
-			if not frappe.db.exists("GL Entry", voucher):
-				voucher = frappe.get_list("GL Entry", filters={"voucher_no": voucher, "party_type": "Supplier"})[0].name
+			if not frappe.db.exists("GL Entry", voucher.get("name")):
+				voucher = frappe.get_list("GL Entry", filters={"voucher_no": voucher.get("name"), "party_type": "Supplier"})[0].name
 			gl_entry = frappe.get_doc('GL Entry', voucher)
 			supplier = frappe.get_doc('Supplier', gl_entry.party)
 			bank_account = frappe.get_all('Bank Account', filters={'account': bank})[0]
@@ -1063,6 +1089,14 @@ def return_reconciliation(j_entry, c_note, voucher, total_credit, value, bank):
 	j_entry.save()
 	return total_credit
 
+def payment_entry_row(p_entry, c_note):
+	row = p_entry.append("references", {})
+	row.reference_doctype = c_note.doctype
+	row.reference_name = c_note.name
+	row.due_date = c_note.due_date
+	row.total_amount = c_note.grand_total
+	row.outstanding_amount = row.allocated_amount = c_note.outstanding_amount
+
 
 def create_journal_entry(j_entry, voucher={}, bank="", debit=0, credit=0, value=0):
 	row = j_entry.append("accounts", {})
@@ -1108,20 +1142,20 @@ def payment_reconciliation(payment, voucher_list, bank, posting_date, value=0):
 	unfinished_total = 0
 	for voucher in voucher_list:
 		if payment.unallocated_amount <= 0:
-			invoice = frappe.get_doc("Sales Invoice", voucher)
-			unfinished_voucher.append(voucher)
+			invoice = frappe.get_doc("Sales Invoice", voucher.get("name"))
+			unfinished_voucher.append(voucher.get("name"))
 			unfinished_total += invoice.outstanding_amount
 			continue
-		if frappe.db.exists("Sales Invoice", voucher):
-			invoice = frappe.get_doc("Sales Invoice", voucher)
+		if frappe.db.exists("Sales Invoice", voucher.get("name")):
+			invoice = frappe.get_doc("Sales Invoice", voucher.get("name"))
 			allo = reconcile.append("allocation", {})
 			allo.reference_type = "Payment Entry"
 			allo.reference_name = payment.name
 			allo.invoice_type = "Sales Invoice"
-			allo.invoice_number = voucher
+			allo.invoice_number = voucher.get("name")
 			if payment.unallocated_amount < invoice.outstanding_amount:
 				allo.allocated_amount = payment.unallocated_amount
-				unfinished_voucher.append(voucher)
+				unfinished_voucher.append(voucher.get("name"))
 				unfinished_total += (invoice.outstanding_amount - payment.unallocated_amount)
 			else:
 				allo.allocated_amount = invoice.outstanding_amount
@@ -1135,34 +1169,18 @@ def payment_reconciliation(payment, voucher_list, bank, posting_date, value=0):
 			inv.outstanding_amount = invoice.outstanding_amount
 			inv.invoice_date = invoice.posting_date
 	reconcile.reconcile()
-	if value and unfinished_voucher:
-		if value == unfinished_total:
-			for voucher in unfinished_voucher:
-				invoice = frappe.get_doc("Sales Invoice", voucher)
-				journal_entry = frappe.get_doc({"doctype": "Journal Entry"})
-				journal_entry.posting_date = posting_date
-				journal_entry.voucher_type = "Bank Entry"
-				journal_entry.cheque_no = invoice.name
-				journal_entry.cheque_date = posting_date
-				create_journal_entry(journal_entry, invoice, credit=invoice.outstanding_amount)
-				create_journal_entry(journal_entry, bank=bank, debit=invoice.outstanding_amount)
-				journal_entry.save()
-		elif value < unfinished_total:
-			for voucher in unfinished_voucher:
-				invoice = frappe.get_doc("Sales Invoice", voucher)
-				journal_entry = frappe.get_doc({"doctype": "Journal Entry"})
-				journal_entry.posting_date = posting_date
-				journal_entry.voucher_type = "Bank Entry"
-				journal_entry.cheque_no = invoice.name
-				journal_entry.cheque_date = posting_date
-				if invoice.outstanding_amount < value:
-					create_journal_entry(journal_entry, invoice, credit=invoice.outstanding_amount)
-					create_journal_entry(journal_entry, bank=bank, debit=invoice.outstanding_amount)
-					unfinished_total -= invoice.outstanding_amount
-				elif 0 < value < invoice.outstanding_amount:
-					create_journal_entry(journal_entry, invoice, credit=value)
-					create_journal_entry(journal_entry, bank=bank, debit=value)
-				journal_entry.save()
+	if unfinished_voucher:
+		for voucher in unfinished_voucher:
+			invoice = frappe.get_doc("Sales Invoice", voucher.get("name"))
+			journal_entry = frappe.get_doc({"doctype": "Journal Entry"})
+			journal_entry.posting_date = posting_date
+			journal_entry.voucher_type = "Bank Entry"
+			journal_entry.cheque_no = invoice.name
+			journal_entry.cheque_date = posting_date
+			create_journal_entry(journal_entry, invoice, credit=invoice.outstanding_amount)
+			create_journal_entry(journal_entry, bank=bank, debit=invoice.outstanding_amount)
+			journal_entry.save()
+
 
 def create_invoices():
 	# create invoices list for payment reconciliation

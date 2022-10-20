@@ -6,12 +6,13 @@ from frappe import _
 
 def execute(filters=None):
 	# Report for all `Draft` invoices to check the profit account and edit posting date check
+
 	columns = get_columns()
-	data = get_draft_invoice_data()
+	data = get_draft_invoice_data(filters)
 	return columns, data
 
 
-def get_draft_invoice_data():
+def get_draft_invoice_data(filters):
 	contract_list = [
 		"service_contract",
 		"cloud_and_hosting_contract",
@@ -20,7 +21,11 @@ def get_draft_invoice_data():
 		"rental_server_contract"
 	]
 	data = []
-	invoice_list = frappe.get_list("Sales Invoice", filters={"status": "Draft"})
+	filter = {"status": "Draft"}
+	if filters.get("from_date") and filters.get("to_date"):
+		filter.update({"posting_date": ["between", (filters.get("from_date"), filters.get("to_date"))]})
+
+	invoice_list = frappe.get_list("Sales Invoice", filters=filter)
 	for invoice in invoice_list:
 		invoice = frappe.get_doc("Sales Invoice", invoice)
 		invoice_total = 0

@@ -4,17 +4,29 @@
 
 frappe.query_reports["Profit Account Check"] = {
 	"filters": [
-
+        {
+			"fieldname": "from_date",
+			"label": __("From Date"),
+			// "default": frappe.datetime.month_start(),
+			"fieldtype": "Date",
+		},
+		{
+			"fieldname": "to_date",
+			"label": __("To Date"),
+			// "default": frappe.datetime.now_date(),
+			"fieldtype": "Date",
+		}
 	],
 	onload: function () {
 		frappe.query_report.page.add_inner_button(__("Submit"), function() {
             var selected_rows = [];
             //collect all checked checkboxes
-            $('.dt-scrollable').find(":input[type=checkbox]").each((idx, row) => {
-                if(row.checked && !selected_rows.includes(frappe.query_report.data[idx/2].invoice)){
-                    console.log(idx/2);
-                    console.log(frappe.query_report.data[idx/2].invoice);
-                    selected_rows.push(frappe.query_report.data[idx/2].invoice);
+
+            frappe.query_report.datatable.rowmanager.checkMap.forEach((checked, index) => {
+                var name = frappe.query_report.data[index].invoice
+                if(checked && name && !selected_rows.includes(name)) {
+                    selected_rows.push(name);
+
                 }
             });
             console.log(selected_rows);
@@ -26,11 +38,11 @@ frappe.query_reports["Profit Account Check"] = {
                     },
                     callback: function (r) {
                         location.reload()
-                        /*frappe.query_report.refresh();
+                        frappe.query_report.refresh();
                         $('.dt-scrollable').find(":input[type=checkbox]").prop("checked", false);
                         $('div.dt-row--highlight').removeClass('dt-row--highlight');
                         $('span.dt-toast__message').remove();
-                        console.log("after refresh");*/
+                        console.log("after refresh");
                     }
                 })
             }
@@ -39,11 +51,17 @@ frappe.query_reports["Profit Account Check"] = {
 	get_datatable_options(options) {
         return Object.assign(options, {
             checkboxColumn: true,
-            /*events: {
+            events: {
                 onCheckRow: function (data) {
-                    $('span.dt-toast__message').remove();
+                    var selected_rows3 = []
+                    frappe.query_report.datatable.rowmanager.checkMap.forEach((checked, index) => {
+                        if(checked) {
+                            selected_rows3.push(index)
+                        }
+                    });
+                    console.log(selected_rows3);
                 }
-            }*/
+            }
         });
     }
 };

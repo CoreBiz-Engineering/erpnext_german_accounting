@@ -22,30 +22,47 @@ def create_journal_entry(args):
 
     debit_account = frappe.get_doc('Account', args.acc_soll)
     credit_account = frappe.get_doc('Account', args.acc_haben)
-    tax_account = frappe.get_doc('Account', args.tax)
-
-    if 'Kreditorenkonten' in debit_account.parent_account or 'Debitorenkonten' in debit_account.parent_account:
-        party_account_name = frappe.get_value("Party Account", filters={"account": debit_account.name})
-        party_account = frappe.get_doc("Party Account", party_account_name)
-        create_journal_entry_account(j_entry, debit_account, debit=args.value, party_type=party_account.parenttype, party=party_account.parent, args=args)
+    debit_party = frappe.get_value("Party Account", filters={"account": debit_account.name})
+    if args.acc_tax_us and args.acc_tax_vs:
+        tax_us = frappe.get_doc('Account', args.acc_tax_us)
+        tax_vs = frappe.get_doc('Account', args.acc_tax_vs)
+        create_journal_entry_account(j_entry, debit_account, debit=args.value, args=args)
         create_journal_entry_account(j_entry, credit_account, credit=args.voucher_netto_value)
-        create_journal_entry_account(j_entry, tax_account, credit=args.tax_value)
+        create_journal_entry_account(j_entry, tax_vs, debit=args.tax_value)
+        create_journal_entry_account(j_entry, tax_us, credit=args.tax_value)
+    elif args.tax_kind == "US":
+        tax_account = frappe.get_doc('Account', args.tax)
+        if debit_party:
+            create_journal_entry_account(j_entry, debit_account, debit=args.value, args=args)
+            create_journal_entry_account(j_entry, credit_account, credit=args.voucher_netto_value)
+            create_journal_entry_account(j_entry, tax_account, credit=args.tax_value)
+        else:
+            create_journal_entry_account(j_entry, credit_account, credit=args.value)
+            create_journal_entry_account(j_entry, debit_account, debit=args.voucher_netto_value, args=args)
+            create_journal_entry_account(j_entry, tax_account, debit=args.tax_value)
+    elif args.tax_kind == "VS":
+        tax_account = frappe.get_doc('Account', args.tax)
+        if debit_party:
+            create_journal_entry_account(j_entry, debit_account, debit=args.value, args=args)
+            create_journal_entry_account(j_entry, credit_account, credit=args.voucher_netto_value)
+            create_journal_entry_account(j_entry, tax_account, credit=args.tax_value)
+        else:
+            create_journal_entry_account(j_entry, credit_account, credit=args.value)
+            create_journal_entry_account(j_entry, debit_account, debit=args.voucher_netto_value, args=args)
+            create_journal_entry_account(j_entry, tax_account, debit=args.tax_value)
     else:
-        party_account_name = frappe.get_value("Party Account", filters={"account": credit_account.name})
-        party_account = frappe.get_doc("Party Account", party_account_name)
-        create_journal_entry_account(j_entry, credit_account, credit=args.value, party_type=party_account.parenttype, party=party_account.parent, args=args)
-        create_journal_entry_account(j_entry, debit_account, debit=args.voucher_netto_value)
-        create_journal_entry_account(j_entry, tax_account, debit=args.tax_value)
+        create_journal_entry_account(j_entry, debit_account, debit=args.value, args=args)
+        create_journal_entry_account(j_entry, credit_account, credit=args.voucher_netto_value)
 
     if len(j_entry.accounts) <= 1:
-        frappe.msg_print("Ups, hier ist etwas schief gegangen.\nBuchung beinhaltet nur eine Buchungszeile!")
+        frappe.msg_print("Ups, hier ist etwas schief gegangen.\nBuchung beinhaltet nur eine oder keine Buchungszeile!")
         return
 
     j_entry.voucher_type = "Journal Entry"
     j_entry.posting_date = args.voucher_date
     j_entry.cheque_no = args.voucher_id
     j_entry.cheque_date = args.voucher_date
-    j_entry.is_opening = "Yes" if args.is_opening else "No"
+    j_entry.is_opening = "Yes" if int(args.is_opening) else "No"
     j_entry.user_remark = args.posting_text
     j_entry.bill_no = args.voucher_id
     j_entry.bill_date = args.voucher_date
@@ -56,13 +73,15 @@ def create_journal_entry(args):
     j_entry.save()
 
 
-def create_journal_entry_account(j_entry, account, debit=0, credit=0, party_type="", party="", args={}):
+def create_journal_entry_account(j_entry, account, debit=0, credit=0, args={}):
     row = j_entry.append("accounts", {})
     row.account = account.name
+    party_account_name = frappe.get_value("Party Account", filters={"account": account.name})
 
-    if party_type:
-        row.party_type = party_type
-        row.party = party
+    if party_account_name:
+        party_account = frappe.get_doc("Party Account", party_account_name)
+        row.party_type = party_account.parenttype
+        row.party = party_account.parent
     if debit:
         row.debit_in_account_currency = debit
         row.debit = debit
@@ -105,18 +124,15 @@ def get_tax_code_data(args):
                                 as_dict=1)
 
     args.tax_rate = tax_data.get('tax_rate')
-    if args.tax_kind == "US" or tax_data.get('tax_code') in ['326', '118']:
-        args.acc_tax_us = tax_data.get('account_ust')
-    if args.tax_kind == "VS" or tax_data.get('tax_code') in ['326', '118']:
-        args.acc_tax_vs = tax_data.get('account_vst')
-    if tax_data.get('tax_rate'):
-        args.tax = ""
-        for tax in ['acc_tax_us', 'acc_tax_vs']:
-            if args.get(tax):
-                tax_account = (
-                        frappe.get_value('Account', filters={"account_number": args.get(tax)}, as_dict=1)).get(
-                        'name')
-                args.tax = tax_account
+
+    if tax_data.get('tax_code') in ['326', '118']:
+        args.acc_tax_us = frappe.get_list("Account", filters={"account_number": tax_data.get('account_ust')})[0].get("name")
+        args.acc_tax_vs = frappe.get_list("Account", filters={"account_number": tax_data.get('account_vst')})[0].get("name")
+    elif args.tax_kind == "US":
+        args.tax = (frappe.get_value('Account', filters={"account_number": tax_data.get('account_ust')}, as_dict=1)).get('name')
+    else:
+        args.tax = (frappe.get_value('Account', filters={"account_number": tax_data.get('account_vst')}, as_dict=1)).get('name')
+
     return args
 
 
@@ -185,12 +201,12 @@ def generate_journal_entries(**args):
     if not args.tax_kind:
         args.tax_kind = '0'
 
-    if args.tax_kind != '0':
+    if args.tax_kind != '0' or '326' in args.tax_code or '118' in args.tax_code:
         args = get_tax_code_data(args)
 
     create_journal_entry(args)
 
-    return
+    return {"generated": 1}
 
 
 def get_account_total_amount(account, fiscal_year):

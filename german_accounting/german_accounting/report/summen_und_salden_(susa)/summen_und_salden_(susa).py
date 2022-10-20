@@ -115,6 +115,14 @@ def get_opening_entries(year, party):
 		elif entry.get('opening_credit') and not entry.get('opening_debit'):
 			entry['opening_s_h'] = 'H'
 			entry['opening_value'] = entry.get('opening_credit')
+		elif entry.get('opening_debit') > entry.get('opening_credit'):
+			entry['opening_value'] = entry.get('opening_credit')
+			entry['opening_value'] = entry.get('opening_debit') - entry.get('opening_credit')
+			entry['opening_s_h'] = 'S'
+		elif entry.get('opening_debit') < entry.get('opening_credit'):
+			entry['opening_value'] = entry.get('opening_credit') - entry.get('opening_debit')
+			entry['opening_s_h'] = 'H'
+
 
 	return entries
 
@@ -234,7 +242,9 @@ def get_account_data(opening, monthly, party):
 					sum_sal_d += entry.get('saldo', 0) if entry.get('saldo_s_h') == "S" else 0
 					sum_sal_c -= entry.get('saldo', 0) if entry.get('saldo_s_h') == "H" else 0
 
+
 			if sum_ope_d or sum_ope_c or sum_mon_d or sum_mon_c or sum_cum_d or sum_cum_c or sum_sal_d or sum_sal_c:
+
 				sum_sal = 0
 				sum_sal_s_h = ""
 				if sum_sal_d or sum_sal_c:
@@ -244,8 +254,17 @@ def get_account_data(opening, monthly, party):
 						sum_sal_s_h = "H"
 					else:
 						sum_sal_s_h = "S"
+				opening_sum = 0
+				if sum_ope_d or sum_ope_c:
+					if sum_ope_d:
+						opening_sum += sum_ope_d
+					if sum_ope_c:
+						opening_sum -= sum_ope_c
+					s_h = "H" if opening_sum < 0 else "S"
+					opening_sum = opening_sum * (-1) if opening_sum < 0 else opening_sum
+
 				sum_list += [{'index': i + 0.1},
-							 {'index': i + 0.2, 'opening_value': sum_ope_d, 'opening_s_h': 'S', 'month_debit': sum_mon_d,
+							 {'index': i + 0.2, 'opening_value': opening_sum, 'opening_s_h': s_h, 'month_debit': sum_mon_d,
 							  'month_credit': sum_mon_c,'cumulative_debit': sum_cum_d, 'cumulative_credit': sum_cum_c,
 							  'saldo': sum_sal, 'saldo_s_h': sum_sal_s_h, 'account_name': 'Summe Klasse ' + str(i)},
 							 {'index': i + 0.4}]
@@ -325,6 +344,7 @@ def calculate_saldo(entries):
 				else:
 					saldo += entry.get('cumulative_credit', 0) - entry.get('cumulative_debit', 0)
 					entry['saldo_s_h'] = "H"
+
 
 		if saldo < 0 and entry.get('saldo_s_h') == "S":
 			entry['saldo'] = saldo * (-1)

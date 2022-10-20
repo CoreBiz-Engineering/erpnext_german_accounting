@@ -63,14 +63,13 @@ def read_csv_file(file_url):
                     invoice_list = [invoice.name for invoice in invoice_list]
                     row["hint"] = "Vorschlag, RE wurde mittels IBAN ermittelt!"
 
-
         # Try to find invoices via transfer amount
         if not invoice_list:
             invoice_list = frappe.get_list(
                 "Sales Invoice",
                 filters={
                     "outstanding_amount":row.get("Betrag"),
-                    "status":["in",["Overdue", "Unpaid"]]
+                    "status": ["in", ["Overdue", "Unpaid"]]
                 }
             )
             if invoice_list:
