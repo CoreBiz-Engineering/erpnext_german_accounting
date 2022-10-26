@@ -1,5 +1,20 @@
 [
  {
+  "account_ust": "1775",
+  "account_vst": "1575",
+  "description": "Steuercode 16%",
+  "docstatus": 0,
+  "doctype": "Steuercodes",
+  "modified": "2021-03-31 10:14:28.610220",
+  "name": "401 Steuercode 16%",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null,
+  "tax_code": "401",
+  "tax_rate": "16",
+  "title": "401 Steuercode 16%"
+ },
+ {
   "account_ust": null,
   "account_vst": null,
   "description": "steuerfrei",
