@@ -11,6 +11,7 @@ from collections import OrderedDict
 from erpnext.accounts.utils import get_currency_precision
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions
 from .bank_file_reader import read_csv_file
+from .op_supplier import get_supplier_data
 
 def execute(filters=None):
 	if filters.get("attach"):
@@ -20,10 +21,10 @@ def execute(filters=None):
 			"party_type": "Customer",
 			"naming_by": ["Selling Settings", "cust_master_name"],
 		}
-		if filters.get('party_type') == "Customer":
+		if filters.get('party_type') in ["Customer", "Kunde"]:
 			args = {"party_type": "Customer"}
-		elif filters.get('party_type') == "Supplier":
-			args = {"party_type": "Supplier"}
+		elif filters.get('party_type') in ["Supplier", "Lieferant"]:
+			return get_supplier_data()
 		else:
 			args = {}
 		return ReceivableSumCustomerReport(filters).run(args)
@@ -997,6 +998,87 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 						pass
 
 	elif party_type == 'Supplier' or party_type == 'Lieferant':
+		if bool(int(allocate)):
+			c_note = frappe._dict()
+			for voucher in voucher_list:
+				if voucher.get("reference_type") == "Journal Entry":
+					j_entry = frappe.get_doc("Journal Entry", voucher.get("name"))
+					for account in j_entry.accounts:
+						if account.party_type == "Supplier" and account.reference_name is None:
+							if account.debit_in_account_currency:
+								c_note = account
+								voucher_list.remove(voucher)
+								break
+			if not c_note:
+				return
+			for voucher in voucher_list:
+				if c_note.debit_in_account_currency <= 0:
+					break
+				if frappe.db.exists("Journal Entry", voucher.get("name")):
+					j_entry = frappe.get_doc("Journal Entry", voucher.get("name"))
+				else:
+					continue
+				outstanding_amount = float(voucher.get("outstanding_amount"))
+				reconcile = frappe.get_doc("Payment Reconciliation")
+				reconcile.company = frappe.defaults.get_user_default("Company")
+				reconcile.party_type = "Supplier"
+				reconcile.party = c_note.party
+				reconcile.receivable_payable_account = c_note.account
+
+				inv = reconcile.append("invoices", {})
+				inv.invoice_type = "Journal Entry"
+				inv.invoice_number = j_entry.name
+				inv.amount = j_entry.total_debit
+				inv.outstanding_amount = outstanding_amount
+				inv.invoice_date = j_entry.posting_date
+
+				row = reconcile.append("allocation", {})
+				row.unreconciled_amount = c_note.debit_in_account_currency
+				row.reference_row = c_note.name
+				if c_note.debit_in_account_currency >= outstanding_amount:
+					row.reference_type = c_note.parenttype
+					row.reference_name = c_note.parent
+					row.invoice_type = "Journal Entry"
+					row.invoice_number = j_entry.name
+					row.allocated_amount = outstanding_amount
+					row.amount = c_note.debit_in_account_currency
+					c_note.debit_in_account_currency -= outstanding_amount
+					outstanding_amount = 0
+				elif c_note.debit_in_account_currency <= outstanding_amount:
+					row.reference_type = c_note.parenttype
+					row.reference_name = c_note.parent
+					row.invoice_type = "Journal Entry"
+					row.invoice_number = j_entry.name
+					row.allocated_amount = c_note.debit_in_account_currency
+					row.amount = c_note.debit_in_account_currency
+					outstanding_amount -= c_note.debit_in_account_currency
+					c_note.debit_in_account_currency = 0
+				if c_note.debit_in_account_currency == 0 and value:
+					payment = frappe.new_doc("Payment Entry")
+					payment.payment_type = "Pay"
+					payment.posting_date = posting_date
+					payment.party_type = "Supplier"
+					payment.party = c_note.party
+					payment.paid_to = c_note.account
+					payment.paid_from = bank
+					payment.paid_to_account_currency = 'EUR'
+					payment.paid_amount = payment.received_amount = value
+					payment.reference_no = j_entry.name
+					payment.reference_date = posting_date
+					payment.cost_center = c_note.cost_center
+					row = payment.append("references", {})
+					if value <= outstanding_amount:
+						row.reference_doctype = "Journal Entry"
+						row.reference_name = j_entry.name
+						row.allocated_amount = value
+					else:
+						row.reference_doctype = "Journal Entry"
+						row.reference_name = j_entry.name
+						row.allocated_amount = outstanding_amount
+						value -= outstanding_amount
+					payment.save()
+				reconcile.reconcile()
+			return
 		for voucher in voucher_list:
 			if not frappe.db.exists("GL Entry", voucher.get("name")):
 				voucher = frappe.get_list("GL Entry", filters={"voucher_no": voucher.get("name"), "party_type": "Supplier"})[0].name

@@ -24,7 +24,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "OP-Liste",
    "link_to": "OP List",
    "link_type": "Report",
@@ -33,7 +33,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Umsatzsteuer Voranmeldung",
    "link_to": "Umsatzsteuer Voranmeldung",
    "link_type": "Report",
@@ -43,7 +43,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Betriebswirtschaftliche Auswertung",
    "link_to": "Betriebswirtschaftliche Auswertungen",
    "link_type": "Report",
@@ -52,11 +52,22 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "Summen & Saldenliste",
    "link_to": "Summen und Salden (SuSa)",
    "link_type": "Report",
    "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Accounting Summary Report",
+   "link_to": "Accounting Summary Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "only_for": "",
    "type": "Link"
   },
   {
@@ -105,6 +116,7 @@
    "link_to": "",
    "link_type": "DocType",
    "onboard": 0,
+   "only_for": "",
    "type": "Card Break"
   },
   {
@@ -150,6 +162,17 @@
    "link_to": "Steuercodes",
    "link_type": "DocType",
    "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounting Summary Report Settings",
+   "link_to": "Accounting Summary Report",
+   "link_type": "DocType",
+   "onboard": 0,
+   "only_for": "",
    "type": "Link"
   },
   {
@@ -159,6 +182,7 @@
    "link_to": "",
    "link_type": "DocType",
    "onboard": 0,
+   "only_for": "",
    "type": "Card Break"
   },
   {
@@ -171,7 +195,7 @@
    "type": "Link"
   }
  ],
- "modified": "2022-10-20 13:36:11.839155",
+ "modified": "2022-10-25 09:36:48.139595",
  "modified_by": "Administrator",
  "module": "German Accounting",
  "name": "Deutsche Buchhaltung",

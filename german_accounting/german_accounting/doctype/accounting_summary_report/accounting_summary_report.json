@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2022-10-24 10:29:27.474356",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "accounts",
+  "territory"
+ ],
+ "fields": [
+  {
+   "fieldname": "accounts",
+   "fieldtype": "Table",
+   "label": "Accounts",
+   "options": "Accounting Summary Report Account"
+  },
+  {
+   "fieldname": "territory",
+   "fieldtype": "Table",
+   "label": "Territory",
+   "options": "Accounting Summary Report Territory"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2022-10-24 10:29:27.474356",
+ "modified_by": "Administrator",
+ "module": "German Accounting",
+ "name": "Accounting Summary Report",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
