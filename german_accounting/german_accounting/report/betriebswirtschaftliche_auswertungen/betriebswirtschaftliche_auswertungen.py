@@ -18,7 +18,6 @@ def execute(filters=None):
         data = get_bwa_result(filters)
         columns = get_columns()
     elif filters.get('view') == 'BWA Kontenansicht':
-
         compare = filters.get('comparison')
         data = get_bwa_account_result(filters)
         bwa = get_bwa_result(filters)
@@ -417,11 +416,8 @@ def get_gl_entries(accounts, filters):
                 """.format(line=row, dvon=filters.get('from_date'), dbis=filters.get('to_date'))
         gl_entries += frappe.db.sql(sel, as_dict=1)
 
-        sum_deb = 0
-        sum_cred = 0
-        sum_account = 0
-        sum = 0
-
+        sum_deb, sum_cred, sum_account, sum = 0, 0, 0, 0
+        type = ""
         if gl_entries:
             for account_data in gl_entries:
                 if account_data.get('debit'):
@@ -430,12 +426,13 @@ def get_gl_entries(accounts, filters):
                 elif account_data.get('credit'):
                     sum += account_data.get('credit') * (-1)
                     sum_account += account_data.get('credit') * (-1)
+                type = account_data.get("type")
             if sum < 0:
                 subtotal = sum * (-1)
             else:
-                subtotal = sum
+                subtotal = sum * (-1)
             res.append({"zeile": row, 'row_sum': sum, 'subtotal': subtotal, 'debit_credit': sum_account,
-                        'debit': round(sum_deb, 2), 'credit': round(sum_cred, 2)})
+                        'debit': round(sum_deb, 2), 'credit': round(sum_cred, 2), "type": type})
 
     return res
 
@@ -488,7 +485,6 @@ def calc_short_bwa(bwa, accounts):
             ordered_list.append(row.get('zeile'))
     ordered_list.sort()
     for row in ordered_list:
-        print("row:", row)
         for bwa_row in accounts:
             if row == bwa_row.get('zeile'):
                 if bwa_row.get('zeile_von') and bwa_row.get('zeile_bis') and bwa_row.get('konto_von'):
@@ -572,6 +568,7 @@ def calc_bwa(sub_rows, account_totals):
     """
     calucaltion of all bwa-accounts subtotals
     """
+
     ordered_subtotal = []
     merged_rows = []
     for elem in sub_rows:
@@ -602,10 +599,11 @@ def calc_bwa(sub_rows, account_totals):
                 elif int(sub.get('funktion')) == 2:
                     sum += function_key_2(sub, res)
                 sub['row_sum'] = round(sum, 2)
+
                 if round(sum, 2) < 0:
                     sub['subtotal'] = round(sum, 2) * (-1)
                 else:
-                    sub['subtotal'] = round(sum, 2)
+                    sub['subtotal'] = round(sum, 2) * (-1)
 
     return res
 
@@ -627,8 +625,10 @@ def function_key_1(sub_row, account_totals):
         if not sub_row.get('zeilen'):
             continue
         for row in sub_row.get('zeilen'):
+
             if (sub.get('zeile') or sub.get('sort_zeile')) >= row.get('zeile_von') \
                     and (sub.get('zeile') or sub.get('sort_zeile')) <= row.get('zeile_bis'):
+
                 if zeile == '':
                     try:
                         zeile = sub.get('zeile')
@@ -636,11 +636,11 @@ def function_key_1(sub_row, account_totals):
                         zeile = sub.get('sub_zeile')
                 if sub.get('row_sum'):
                     sum += sub.get('row_sum')
-                # sum += sub.get('sum')
                 elif sub.get('debit') or sub.get('credit'):
                     sum += sub.get('debit') + (-1 * sub.get('credit'))
 
     # return {'sum': sum, 'zeile': zeile}
+
     return sum
 
 
@@ -660,16 +660,25 @@ def function_key_2(sub_row, account_totals):
     zu dem Wert, von dem die Zeilenwerte ursprünglich subtrahiert werden sollten. Das Ergebnis entspricht dem einer
     Subtraktion.
     """
-
     sum = 0
     for sub in account_totals:
         if not sub_row.get('zeilen'):
             continue
+
         for row in sub_row.get("zeilen"):
+
             if row.get('zeile_von') == sub.get('zeile') \
                     or row.get('zeile_bis') == sub.get('zeile'):
                 sum += sub.get('row_sum')
-            # sum += sub.get('sum')
+            '''
+
+            if row.get('zeile_von') == sub.get('zeile'):
+                if sub_row.get("zeile") == "1080":
+                sum += sub.get('row_sum')
+            elif row.get('zeile_bis') == sub.get('zeile'):
+                if sub_row.get("zeile") == "1080":
+                sum -= sub.get('row_sum')
+            '''
 
     return sum
 
@@ -823,7 +832,7 @@ def get_bwa_account_result(filters):
     subtotal_rows = get_bwa_sum_rows()
     if not subtotal_rows:
         return
-    row_sum = get_gl_entries(account_rows, filters)
+    row_sum_list = get_gl_entries(account_rows, filters)
     acc_res = []
 
     # merge all rows
@@ -834,7 +843,7 @@ def get_bwa_account_result(filters):
             continue
         if merged_rows.get(row.get("zeile")):
             merged_rows[row.get("zeile")].get("konto").append(
-                {'konto_von': row.get('konto_von'), 'konto_bis': row.get('konto_bis')})
+                {'konto_von': row.get('konto_von'), 'konto_bis': row.get('konto_bis'), "type": row.get("type")})
         else:
             merged_rows[row.get("zeile")] = {
                 "zeile": row.get('zeile'),
@@ -842,7 +851,7 @@ def get_bwa_account_result(filters):
                 'type': row.get('type'),
                 'funktion': row.get('funktion'),
                 'konto': [
-                    {'konto_von': row.get('konto_von'), 'konto_bis': row.get('konto_bis')}
+                    {'konto_von': row.get('konto_von'), 'konto_bis': row.get('konto_bis'), "type": row.get("type")}
                 ]
             }
 
@@ -856,34 +865,39 @@ def get_bwa_account_result(filters):
                                           date_from=filters.get('from_date'),
                                           date_to=filters.get('to_date')))
         head = 0
+
         for subtotal in acc_subtotal:
-            sum_acc = 0
-            sum = 0
+            account_sum_calc, account_sum_display, account_sum_row,row_sum = 0, 0, 0, 0
+
             if (subtotal.get('type')).upper() == "S":
                 if subtotal.get('debit'):
-                    sum_acc += subtotal.get('debit')
+                    account_sum_calc += subtotal.get('debit')
                 if subtotal.get('credit'):
-                    sum_acc += subtotal.get('credit') * (-1)
+                    account_sum_calc -= subtotal.get('credit')
             elif (subtotal.get('type')).upper() == "H":
                 if subtotal.get('debit'):
-                    sum_acc += subtotal.get('debit') * (-1)
+                    account_sum_calc -= subtotal.get('debit')
                 if subtotal.get('credit'):
-                    sum_acc += subtotal.get('credit')
+                    account_sum_calc += subtotal.get('credit')
 
             if head == 0:
-                for acc_sum in row_sum:
+                # get total of row-nr from row_sum_list
+                for acc_sum in row_sum_list:
                     if acc_sum.get('zeile') == elem:
-                        sum = acc_sum.get('subtotal')
+                        account_sum_row = acc_sum.get('subtotal')
+                        row_sum = acc_sum.get('subtotal')
+                # create header for table- and print-view
                 acc_res.append({
                     'zeile': elem,
                     'sort_zeile': elem,
                     'sort_account': "1",
                     'sort_name': row.get('zeilen_name'),
                     'zeilen_name': row.get('zeilen_name'),
-                    'subtotal': round(sum, 2)
+                    'subtotal': round(account_sum_row, 2),
+                    'row_sum': row_sum
                 })
                 head = 1
-
+            # append account row for table- and print-view
             acc_res.append({
                 'zeile': elem,
                 'sort_zeile': elem,
@@ -891,7 +905,7 @@ def get_bwa_account_result(filters):
                 'sort_name': row.get('zeilen_name'),
                 'account': subtotal.get('account_number'),
                 'name': subtotal.get('account_name'),
-                'sum': sum_acc,
+                'sum': account_sum_calc,
                 'type': row.get('type'),
                 'funktion': row.get('funktion')
             })
@@ -903,5 +917,5 @@ def get_bwa_account_result(filters):
 
     space = get_space()
     acc_res += space
-    # frappe.logger().debug(acc_res)
+
     return acc_res

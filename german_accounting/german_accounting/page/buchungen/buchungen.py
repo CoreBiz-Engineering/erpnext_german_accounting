@@ -32,7 +32,7 @@ def create_journal_entry(args):
         create_journal_entry_account(j_entry, tax_us, credit=args.tax_value)
     elif args.tax_kind == "US":
         tax_account = frappe.get_doc('Account', args.tax)
-        if debit_party:
+        if debit_party or debit_account.account_type == "Bank":
             create_journal_entry_account(j_entry, debit_account, debit=args.value, args=args)
             create_journal_entry_account(j_entry, credit_account, credit=args.voucher_netto_value)
             create_journal_entry_account(j_entry, tax_account, credit=args.tax_value)
@@ -42,7 +42,7 @@ def create_journal_entry(args):
             create_journal_entry_account(j_entry, tax_account, debit=args.tax_value)
     elif args.tax_kind == "VS":
         tax_account = frappe.get_doc('Account', args.tax)
-        if debit_party:
+        if debit_party or debit_account.account_type == "Bank":
             create_journal_entry_account(j_entry, debit_account, debit=args.value, args=args)
             create_journal_entry_account(j_entry, credit_account, credit=args.voucher_netto_value)
             create_journal_entry_account(j_entry, tax_account, credit=args.tax_value)

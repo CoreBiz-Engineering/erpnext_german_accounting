@@ -873,27 +873,34 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 										  'debit_in_account_currency': debit_value}]
 						})
 						journal_entry.insert()
-				elif frappe.db.exists('GL Entry', voucher.get("name")):
-
-					gl_entry = frappe.get_doc('GL Entry', voucher.get("name"))
-					customer = frappe.get_doc('Customer', gl_entry.party)
+				elif frappe.db.exists('Journal Entry', voucher.get("name")):
+					j_entry = frappe.get_doc('Journal Entry', voucher.get("name"))
+					customer = {}
+					debit, credit = 0, 0
+					entry_account = ""
+					for row in j_entry.accounts:
+						if row.party_type == "Customer":
+							customer = frappe.get_doc('Customer', row.party)
+							entry_account = row.account
+							if row.debit:
+								debit = row.debit
+							else:
+								credit = row.credit
+					if not customer and not entry_account:
+						frappe.throw("Kein Kunde in der Buchung zu finden.")
 
 					if float(value): debit_value = value
-					else: debit_value = gl_entry.debit
+					else: debit_value = debit
 
-					if float(value) > gl_entry.debit:
-						if frappe.db.exists("Journal Entry", gl_entry.voucher_no):
-							j_entry = frappe.get_doc("Journal Entry", gl_entry.voucher_no)
-							reference_no = j_entry.cheque_no
-						else:
-							reference_no = gl_entry.voucher_no
+					if float(value) > debit:
+						reference_no = j_entry.cheque_no
 						payment = frappe.get_doc({
 							'doctype': 'Payment Entry',
-							'title': gl_entry.party,
+							'title': customer.name,
 							'payment_type': 'Receive',
 							'posting_date': posting_date,
 							'party_type': 'Customer',
-							'party': gl_entry.party,
+							'party': customer.name,
 							'paid_to': bank,
 							'paid_from': "",
 							'paid_to_account_currency': 'EUR',
@@ -906,49 +913,47 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 						})
 						row = payment.append("references", {})
 						row.reference_doctype = "Journal Entry"
-						row.reference_name = gl_entry.voucher_no
+						row.reference_name = j_entry.name
 						payment.insert()
-					elif gl_entry.debit:
+					elif debit:
 						journal_entry = frappe.get_doc({
 							'doctype': 'Journal Entry',
 							'voucher_type': 'Bank Entry',
 							'posting_date': posting_date,
-							'cheque_no': gl_entry.voucher_no,
+							'cheque_no': j_entry.name,
 							'user_remark': remark,
 							'cheque_date': posting_date,
-							'user_remark': remark,
-							'accounts': [{'account': gl_entry.account,
+							'accounts': [{'account': entry_account,
 										  'party_type': 'Customer',
-										  'party': gl_entry.party,
-										  'reference_type': gl_entry.voucher_type,
-										  'reference_name': gl_entry.voucher_no,
+										  'party': customer.name,
+										  'reference_type': "Journal Entry",
+										  'reference_name': j_entry.name,
 										  'credit_in_account_currency': debit_value},
 										 {'account': bank,
 										  'debit_in_account_currency': debit_value}]
 						})
 						journal_entry.insert()
-					elif gl_entry.credit:
+					elif credit:
 						payment = frappe.get_doc({
 							'doctype': 'Payment Entry',
 							'payment_type': 'Pay',
-							'base_paid_amount': gl_entry.credit,
+							'base_paid_amount': credit,
 							'party_type': 'Customer',
-							'title': gl_entry.party,
+							'title': customer.name,
 							'posting_date': posting_date,
-							'base_total_allocated_amount': gl_entry.credit,
-							'paid_to': gl_entry.get('account'),
-							'reference_no': gl_entry.voucher_no,
+							'base_total_allocated_amount': credit,
+							'paid_to': entry_account,
+							'reference_no': j_entry.name,
 							'party_name': customer.customer_name,
 							'paid_to_account_currency': 'EUR',
-							'party': gl_entry.party,
+							'party': customer.name,
 							'reference_date': posting_date, #frappe.utils.nowdate(),
-							'total_allocated_amount': gl_entry.credit,
+							'total_allocated_amount': credit,
 							'paid_from': bank,
-							'received_amount': gl_entry.credit,
-							'paid_amount': gl_entry.credit,
-							'company': gl_entry.company,
+							'received_amount': credit,
+							'paid_amount': credit,
 							'references': [{'reference_doctype': 'Journal Entry',
-											'reference_name': gl_entry.voucher_no,
+											'reference_name': j_entry.name,
 											}]
 						})
 						payment.insert()
@@ -1011,49 +1016,53 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 								break
 			if not c_note:
 				return
+
+			# init reconcile
+			reconcile = frappe.get_doc("Payment Reconciliation")
+			reconcile.company = frappe.defaults.get_user_default("Company")
+			reconcile.party_type = "Supplier"
+			reconcile.party = c_note.party
+			reconcile.receivable_payable_account = c_note.account
+			
 			for voucher in voucher_list:
+				outstanding_amount = float(voucher.get("outstanding_amount"))
 				if c_note.debit_in_account_currency <= 0:
 					break
 				if frappe.db.exists("Journal Entry", voucher.get("name")):
 					j_entry = frappe.get_doc("Journal Entry", voucher.get("name"))
 				else:
 					continue
-				outstanding_amount = float(voucher.get("outstanding_amount"))
-				reconcile = frappe.get_doc("Payment Reconciliation")
-				reconcile.company = frappe.defaults.get_user_default("Company")
-				reconcile.party_type = "Supplier"
-				reconcile.party = c_note.party
-				reconcile.receivable_payable_account = c_note.account
 
-				inv = reconcile.append("invoices", {})
-				inv.invoice_type = "Journal Entry"
-				inv.invoice_number = j_entry.name
-				inv.amount = j_entry.total_debit
-				inv.outstanding_amount = outstanding_amount
-				inv.invoice_date = j_entry.posting_date
+				if c_note.debit_in_account_currency > 0:
+					inv = reconcile.append("invoices", {})
+					inv.invoice_type = "Journal Entry"
+					inv.invoice_number = j_entry.name
+					inv.amount = j_entry.total_debit
+					inv.outstanding_amount = outstanding_amount
+					inv.invoice_date = j_entry.posting_date
 
-				row = reconcile.append("allocation", {})
-				row.unreconciled_amount = c_note.debit_in_account_currency
-				row.reference_row = c_note.name
-				if c_note.debit_in_account_currency >= outstanding_amount:
-					row.reference_type = c_note.parenttype
-					row.reference_name = c_note.parent
-					row.invoice_type = "Journal Entry"
-					row.invoice_number = j_entry.name
-					row.allocated_amount = outstanding_amount
-					row.amount = c_note.debit_in_account_currency
-					c_note.debit_in_account_currency -= outstanding_amount
-					outstanding_amount = 0
-				elif c_note.debit_in_account_currency <= outstanding_amount:
-					row.reference_type = c_note.parenttype
-					row.reference_name = c_note.parent
-					row.invoice_type = "Journal Entry"
-					row.invoice_number = j_entry.name
-					row.allocated_amount = c_note.debit_in_account_currency
-					row.amount = c_note.debit_in_account_currency
-					outstanding_amount -= c_note.debit_in_account_currency
-					c_note.debit_in_account_currency = 0
-				if c_note.debit_in_account_currency == 0 and value:
+					row = reconcile.append("allocation", {})
+					row.unreconciled_amount = c_note.debit_in_account_currency
+					row.reference_row = c_note.name
+					if c_note.debit_in_account_currency >= outstanding_amount:
+						row.reference_type = c_note.parenttype
+						row.reference_name = c_note.parent
+						row.invoice_type = "Journal Entry"
+						row.invoice_number = j_entry.name
+						row.allocated_amount = outstanding_amount
+						row.amount = c_note.debit_in_account_currency
+						c_note.debit_in_account_currency -= outstanding_amount
+						outstanding_amount = 0
+					elif c_note.debit_in_account_currency <= outstanding_amount:
+						row.reference_type = c_note.parenttype
+						row.reference_name = c_note.parent
+						row.invoice_type = "Journal Entry"
+						row.invoice_number = j_entry.name
+						row.allocated_amount = c_note.debit_in_account_currency
+						row.amount = c_note.debit_in_account_currency
+						outstanding_amount -= c_note.debit_in_account_currency
+						c_note.debit_in_account_currency = 0
+				if c_note.debit_in_account_currency == 0 and outstanding_amount:
 					payment = frappe.new_doc("Payment Entry")
 					payment.payment_type = "Pay"
 					payment.posting_date = posting_date
@@ -1062,66 +1071,97 @@ def create_payment(voucher_list,party_type,bank, value, posting_date, skonto, re
 					payment.paid_to = c_note.account
 					payment.paid_from = bank
 					payment.paid_to_account_currency = 'EUR'
-					payment.paid_amount = payment.received_amount = value
+					payment.paid_amount = payment.received_amount = outstanding_amount
 					payment.reference_no = j_entry.name
 					payment.reference_date = posting_date
 					payment.cost_center = c_note.cost_center
 					row = payment.append("references", {})
-					if value <= outstanding_amount:
-						row.reference_doctype = "Journal Entry"
-						row.reference_name = j_entry.name
-						row.allocated_amount = value
-					else:
-						row.reference_doctype = "Journal Entry"
-						row.reference_name = j_entry.name
-						row.allocated_amount = outstanding_amount
-						value -= outstanding_amount
+
+					row.reference_doctype = "Journal Entry"
+					row.reference_name = j_entry.name
+					row.allocated_amount = outstanding_amount
+					row.outstanding_amount = outstanding_amount
 					payment.save()
+
+			if len(reconcile.allocation) > 0:
 				reconcile.reconcile()
 			return
 		for voucher in voucher_list:
-			if not frappe.db.exists("GL Entry", voucher.get("name")):
-				voucher = frappe.get_list("GL Entry", filters={"voucher_no": voucher.get("name"), "party_type": "Supplier"})[0].name
-			gl_entry = frappe.get_doc('GL Entry', voucher)
-			supplier = frappe.get_doc('Supplier', gl_entry.party)
-			bank_account = frappe.get_all('Bank Account', filters={'account': bank})[0]
-			if float(value):
-				credit_value = float(value)
-			elif gl_entry.credit:
-				credit_value = gl_entry.credit
-			else:
-				credit_value = gl_entry.debit
-			# frappe.logger().debug("gl_entry.credit: %s - value: %s" % (gl_entry.credit, value))
+			if voucher.get("reference_type") == "Journal Entry":
+				gl_entry_name = \
+				frappe.get_list("GL Entry", filters={"voucher_no": voucher.get("name"), "party_type": "Supplier"})[
+					0].name
+				gl_entry = frappe.get_doc('GL Entry', gl_entry_name)
 
-			payment = frappe.get_doc({
-				'doctype': 'Payment Entry',
-				'payment_type': 'Pay',
-				'base_paid_amount': credit_value,
-				'party_type': 'Supplier',
-				'title': gl_entry.party,
-				'posting_date': posting_date,
-				'base_total_allocated_amount': credit_value,
-				'paid_to': gl_entry.get('account'),
-				'reference_no': gl_entry.voucher_no,
-				'party_name': supplier.supplier_name,
-				'paid_to_account_currency': 'EUR',
-				'party': gl_entry.party,
-				'bank_account': bank_account.name,
-				'bank': bank_account.account_name,
-				'bank_account_no': bank_account.bank_account_no,
-				'reference_date': posting_date, #frappe.utils.nowdate(),
-				'total_allocated_amount': credit_value,
-				'paid_from': bank,
-				'received_amount': credit_value,
-				'paid_amount': credit_value,
-				'remarks': remark,
-				'references': [{'reference_doctype': 'Journal Entry',
-								'reference_name': gl_entry.voucher_no,
-								'total_amount': gl_entry.credit,
-								'outstanding_amount': gl_entry.credit,
-								'allocated_amount': credit_value}]
-			})
-			payment.insert()
+				supplier = frappe.get_doc('Supplier', gl_entry.party)
+				bank_account = frappe.get_all('Bank Account', filters={"account": bank})[0]
+				if float(value):
+					payed_total = float(value)
+				else:
+					payed_total = voucher.get("outstanding_amount")
+				# frappe.logger().debug("gl_entry.credit: %s - value: %s" % (gl_entry.credit, value))
+				payment = frappe.get_doc({
+					'doctype': 'Payment Entry',
+					'payment_type': 'Pay',
+					'base_paid_amount': payed_total,
+					'party_type': 'Supplier',
+					'title': gl_entry.party,
+					'posting_date': posting_date,
+					'base_total_allocated_amount': payed_total,
+					'paid_to': gl_entry.get('account'),
+					'reference_no': gl_entry.voucher_no,
+					'party_name': supplier.supplier_name,
+					'paid_to_account_currency': 'EUR',
+					'party': gl_entry.party,
+					'bank_account': bank_account.name,
+					'bank': bank_account.account_name,
+					'bank_account_no': bank_account.bank_account_no,
+					'reference_date': posting_date,
+					'total_allocated_amount': payed_total,
+					'paid_from': bank,
+					'received_amount': payed_total,
+					'paid_amount': payed_total,
+					'remarks': remark
+				})
+				row = payment.append("references", {})
+				row.reference_doctype = "Journal Entry"
+				row.reference_name = gl_entry.voucher_no
+				row.total_amount = gl_entry.credit
+				row.outstanding_amount = payed_total
+				row.allocated_amount = payed_total
+				payment.save()
+			elif voucher.get("reference_type") == "Purchase Invoice":
+				p_invoice = frappe.get_doc("Purchase Invoice", voucher.get("name"))
+				if float(value):
+					payed_total = float(value)
+				else:
+					payed_total = voucher.get("outstanding_amount")
+				p_entry = frappe.get_doc({
+					"doctype": "Payment Entry",
+					"payment_type": "Pay",
+					"posting_date": posting_date,
+					"party_type": "Supplier",
+					"party": p_invoice.supplier,
+					"paid_from": bank,
+					"paid_to": p_invoice.credit_to,
+					"paid_amount": payed_total,
+					"reference_no": p_invoice.name,
+					"reference_date": posting_date,
+					"received_amount": payed_total,
+					"base_paid_amount_after_tax": payed_total,
+					"base_paid_amount": payed_total,
+					"base_total_allocated_amount": payed_total,
+					"total_allocated_amount": payed_total,
+					"base_received_amount_after_tax": payed_total,
+					"base_received_amount": payed_total
+				})
+				row = p_entry.append("references", {})
+				row.reference_doctype = "Purchase Invoice"
+				row.reference_name = p_invoice.name
+				row.total_amount = p_invoice.grand_total
+				row.outstanding_amount = payed_total
+				row.allocated_amount = payed_total
+				p_entry.save()
 		#payment.submit()
 	else:
 		pass

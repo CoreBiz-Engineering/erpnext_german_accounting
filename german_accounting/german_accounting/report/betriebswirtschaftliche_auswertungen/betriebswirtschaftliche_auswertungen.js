@@ -23,7 +23,7 @@ frappe.query_reports["Betriebswirtschaftliche Auswertungen"] = {
 			"lablel": __("View"),
 			"fieldtype": "Select",
 			"default": "Kontenansicht",
-			"options": ["BWA", "BWA Kurzbericht", "BWA Kontenansicht"],
+			"options": ["BWA Kurzbericht", "BWA Kontenansicht"],
 			"reqd": 1,
 		},
 		{

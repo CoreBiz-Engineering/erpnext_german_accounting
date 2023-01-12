@@ -25,7 +25,7 @@ def get_draft_invoice_data(filters):
 	if filters.get("from_date") and filters.get("to_date"):
 		filter.update({"posting_date": ["between", (filters.get("from_date"), filters.get("to_date"))]})
 
-	invoice_list = frappe.get_list("Sales Invoice", filters=filter)
+	invoice_list = frappe.get_list("Sales Invoice", filters=filter, order_by="name asc")
 	for invoice in invoice_list:
 		invoice = frappe.get_doc("Sales Invoice", invoice)
 		invoice_total = 0

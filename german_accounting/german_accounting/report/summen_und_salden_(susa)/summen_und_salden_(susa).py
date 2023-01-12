@@ -55,12 +55,16 @@ def get_columns():
 			"fieldname": "opening_s_h",
 			"fieldtype": "Data",
 		},{
-			"label": _("Monatswert Soll"),
+			"label": _("Periode Soll"),
 			"fieldname": "month_debit",
 			"fieldtype": "Currency",
 		},{
-			"label": _("Monatswert Haben"),
+			"label": _("Periode Haben"),
 			"fieldname": "month_credit",
+			"fieldtype": "Currency",
+		},{
+			"label": _("Periode Bewegung"),
+			"fieldname": "period_total",
 			"fieldtype": "Currency",
 		},{
 			"label": _("Kumulierter Wert Soll"),
@@ -69,6 +73,10 @@ def get_columns():
 		},{
 			"label": _("Kumulierter Wert Haben"),
 			"fieldname": "cumulative_credit",
+			"fieldtype": "Currency",
+		},{
+			"label": _("Kumulierter Wert Bewegung"),
+			"fieldname": "cumulative_total",
 			"fieldtype": "Currency",
 		},{
 			"label": _("Saldo"),
@@ -150,7 +158,8 @@ def select_cumulative_entries(year, month, party):
 				CAST(ac.account_number AS INT) as "account_number",
 				ac.account_name,
 				sum(gl.debit) as cumulative_debit,
-				sum(gl.credit) as cumulative_credit
+				sum(gl.credit) as cumulative_credit,
+				(sum(gl.debit) - sum(gl.credit)) as cumulative_total
 			from
 				`tabGL Entry` gl,
 				`tabAccount` ac
@@ -174,7 +183,8 @@ def select_monthly_entries(year, month, party):
 				CAST(ac.account_number AS INT) as "account_number",
 				ac.account_name,
 				sum(gl.debit) as month_debit,
-				sum(gl.credit) as month_credit
+				sum(gl.credit) as month_credit,
+				(sum(gl.debit) - sum(gl.credit)) as period_total
 			from
 				`tabGL Entry` gl,
 				`tabAccount` ac
@@ -216,10 +226,14 @@ def get_account_data(opening, monthly, party):
 
 	data = sorted(opening, key=lambda k: k['account_number'])
 	sum_list = []
-	total_ope_d = total_ope_c = total_mon_d = total_mon_c = total_cum_d = total_cum_c = total_sal_d = total_sal_c = 0
+	total_ope_d, total_ope_c, total_mon_d, total_mon_c, \
+	total_cum_d, total_cum_c, total_sal_d, total_sal_c, total_period, total_cummulativ = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
 	if party == 'Sachkonten':
-		for i in range(0,10):
-			sum_ope_d = sum_ope_c = sum_mon_d = sum_mon_c = sum_cum_d = sum_cum_c = sum_sal_d = sum_sal_c = 0
+		test = 0
+		for i in range(0, 10):
+			sum_ope_d, sum_ope_c, sum_mon_d, sum_mon_c, sum_cum_d, sum_cum_c, sum_sal_d,\
+			sum_sal_c, period_sum, cumulative_sum = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 			for entry in data:
 				if entry.get('account_number') < 1000 and i == 0:
 					entry["index"] = i
@@ -231,6 +245,8 @@ def get_account_data(opening, monthly, party):
 					sum_cum_c += entry.get('cumulative_credit', 0)
 					sum_sal_d += entry.get('saldo', 0) if entry.get('saldo_s_h') == "S" else 0
 					sum_sal_c -= entry.get('saldo', 0) if entry.get('saldo_s_h') == "H" else 0
+					period_sum += entry.get('period_total', 0)
+					cumulative_sum += entry.get('cumulative_total', 0)
 				elif str(entry.get('account_number')).startswith(str(i)) and entry.get('account_number') >= 1000:
 					entry["index"] = i
 					sum_ope_d += entry.get('opening_debit', 0)
@@ -241,7 +257,11 @@ def get_account_data(opening, monthly, party):
 					sum_cum_c += entry.get('cumulative_credit', 0)
 					sum_sal_d += entry.get('saldo', 0) if entry.get('saldo_s_h') == "S" else 0
 					sum_sal_c -= entry.get('saldo', 0) if entry.get('saldo_s_h') == "H" else 0
-
+					period_sum += entry.get('period_total', 0)
+					cumulative_sum += entry.get('cumulative_total', 0)
+					if i == 9:
+						entry["saldo"] = entry.get("opening_value")
+						entry["saldo_s_h"] = entry.get("opening_s_h")
 
 			if sum_ope_d or sum_ope_c or sum_mon_d or sum_mon_c or sum_cum_d or sum_cum_c or sum_sal_d or sum_sal_c:
 
@@ -266,22 +286,25 @@ def get_account_data(opening, monthly, party):
 				sum_list += [{'index': i + 0.1},
 							 {'index': i + 0.2, 'opening_value': opening_sum, 'opening_s_h': s_h, 'month_debit': sum_mon_d,
 							  'month_credit': sum_mon_c,'cumulative_debit': sum_cum_d, 'cumulative_credit': sum_cum_c,
-							  'saldo': sum_sal, 'saldo_s_h': sum_sal_s_h, 'account_name': 'Summe Klasse ' + str(i)},
+							  'saldo': sum_sal, 'saldo_s_h': sum_sal_s_h, 'account_name': 'Summe Klasse ' + str(i),
+							  'period_total': period_sum, 'cumulative_total': cumulative_sum},
 							 {'index': i + 0.4}]
 
 				total_ope_d += sum_ope_d
 				total_ope_c += sum_ope_c
-				total_mon_d += sum_mon_c
-				total_mon_c += sum_mon_d
+				total_mon_d += sum_mon_d
+				total_mon_c += sum_mon_c
 				total_cum_d += sum_cum_d
 				total_cum_c += sum_cum_c
 				total_sal_d += sum_sal_d
 				total_sal_c += sum_sal_c
-
+				total_period += period_sum
+				total_cummulativ += cumulative_sum
 		sum_list += [{'index': 10, 'account_name': "Sachkonten", 'opening_value': total_ope_d, 'opening_s_h': 'S',
-					  'month_debit': total_mon_d, 'month_credit': total_mon_c,'cumulative_debit': total_cum_d,
-					  'cumulative_credit': total_cum_c, 'saldo': total_sal_d, 'saldo_s_h': 'S'},
-					 {'index': 10.1, 'opening_value': total_ope_c, 'opening_s_h': 'H', 'saldo': total_sal_c, 'saldo_s_h': 'H'}]
+						'month_debit': total_mon_d, 'month_credit': total_mon_c,'cumulative_debit': total_cum_d,
+						'cumulative_credit': total_cum_c, 'saldo': total_sal_d, 'saldo_s_h': 'S',
+						'period_total': total_period, 'cumulative_total': total_cummulativ},
+					{'index': 10.1, 'opening_value': total_ope_c, 'opening_s_h': 'H', 'saldo': total_sal_c, 'saldo_s_h': 'H'}]
 	else:
 		sum_ope_d = sum_ope_c = sum_mon_d = sum_mon_c = sum_cum_d = sum_cum_c = sum_sal_d = sum_sal_c = 0
 		for entry in data:

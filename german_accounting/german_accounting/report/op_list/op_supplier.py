@@ -28,6 +28,7 @@ def get_supplier_data(party_type="Supplier"):
     for voucher in party_op:
         if voucher.get('supplier') not in op_supplier_list:
             op_supplier_list.append(voucher.get('supplier'))
+    op_supplier_list.sort()
     for supplier in op_supplier_list:
         debit = credit = payed = outstanding_amount = 0
         for voucher in party_op:
@@ -127,7 +128,7 @@ def get_jv_entries(party):
             "Journal Entry" as reference_type, t1.name as reference_name,
             t1.posting_date, t1.remark as remarks, t2.name as reference_row,
             debit_in_account_currency as amount, t2.is_advance, t2.account, t2.party as 'supplier',
-            t2.account_currency as currency
+            t2.account_currency as currency, t1.remark, t1.cheque_no
         from
             `tabJournal Entry` t1, `tabJournal Entry Account` t2
         where
@@ -242,6 +243,9 @@ def get_outstanding_invoices(party, filters=None):
                 continue
 
             if not d.voucher_type == "Purchase Invoice" or d.voucher_no not in held_invoices:
+                entry = frappe._dict()
+                if d.voucher_type == "Journal Entry":
+                    entry = frappe.get_doc("Journal Entry", d.voucher_no)
                 outstanding_invoices.append(
                     frappe._dict(
                         {
@@ -255,6 +259,8 @@ def get_outstanding_invoices(party, filters=None):
                             "outstanding_amount": outstanding_amount,
                             "due_date": d.due_date,
                             "currency": d.currency,
+                            "remark": entry.remark,
+                            "cheque_no": entry.cheque_no
                         }
                     )
                 )
