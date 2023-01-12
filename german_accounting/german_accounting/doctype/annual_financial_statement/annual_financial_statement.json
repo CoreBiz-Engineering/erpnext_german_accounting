@@ -42,7 +42,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2022-10-20 10:57:20.414659",
+ "modified": "2022-10-21 10:26:55.499557",
  "modified_by": "Administrator",
  "module": "German Accounting",
  "name": "Annual Financial Statement",
@@ -55,6 +55,16 @@
    "print": 1,
    "read": 1,
    "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
    "share": 1,
    "write": 1
   }

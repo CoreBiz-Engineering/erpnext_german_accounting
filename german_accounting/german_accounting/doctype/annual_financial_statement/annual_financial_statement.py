@@ -1,16 +1,6 @@
 # Copyright (c) 2022, LIS and contributors
 # For license information, please see license.txt
 
-# import frappe
-from frappe.model.document import Document
-
-class AnnualFinancialStatement(Document):
-	pass
-
-
-# Copyright (c) 2022, LIS and contributors
-# For license information, please see license.txt
-
 import frappe
 from frappe.model.document import Document
 import time, calendar
@@ -24,7 +14,7 @@ class AnnualFinancialStatement(Document):
 	def select_entries(self, account_type, fiscal_year, submit):
 		# select all accounts with given account_type
 		fiscal_year = int(fiscal_year)
-		settings = frappe.get_single("Jahresabschlusseinstellungen")
+		settings = frappe.get_single("Annual Financial Statement Setting")
 		accounts = []
 		if account_type == "Aktiva/Passiva":
 			self.closing_account = settings.activa_passiva_account
@@ -131,7 +121,7 @@ class AnnualFinancialStatement(Document):
 
 		# create log entry for current closing process
 		closing_log = frappe.get_doc({
-			"doctype": "Jahresabschluss Log",
+			"doctype": "Annual Financial Statement Log",
 			"closing_type": account_type,
 			"posting_date": datetime.now()
 		})
