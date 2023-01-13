@@ -10,3 +10,21 @@ temp/
 log/
 __pycache__/
 docs/
+*.py~
+*.comp.js
+*.DS_Store
+locale
+.wnf-lang-status
+*.swp
+*.egg-info
+dist/
+# build/
+frappe/docs/current
+frappe/public/dist
+.vscode
+.vs
+node_modules
+.kdev4/
+*.kdev4
+*debug.log
+
