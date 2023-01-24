@@ -4,7 +4,9 @@
 
 from __future__ import unicode_literals
 import frappe, erpnext, json, time, datetime
-from frappe import _, scrub
+from frappe import _, scrub, qb
+from frappe.query_builder.functions import IfNull
+from frappe.query_builder.custom import ConstantColumn
 from frappe.utils import cint, cstr, flt, formatdate, get_number_format_info, getdate, now, nowdate
 from .op_list_columns import get_supplier_columns
 import erpnext
@@ -154,28 +156,20 @@ def get_jv_entries(party):
 
 def get_dr_or_cr_notes(party):
     payment_reconciliation = frappe.new_doc("Payment Reconciliation")
-    condition = payment_reconciliation.get_conditions(get_return_invoices=True)
-
-    return frappe.db.sql("""
-        SELECT doc.name as reference_name, 'Purchase Invoice' as reference_type,
-        (sum(gl.debit_in_account_currency) - sum(gl.credit_in_account_currency)) as amount, doc.posting_date,
-        account_currency as currency
-        FROM `tabPurchase Invoice` doc, `tabGL Entry` gl
-        WHERE
-        (doc.name = gl.against_voucher or doc.name = gl.voucher_no)
-        and doc.supplier in %(party)s
-        and doc.is_return = 1 and ifnull(doc.return_against, "") = ""
-        and gl.against_voucher_type = 'Purchase Invoice'
-        and doc.docstatus = 1 and gl.party in %(party)s
-        and gl.party_type = 'Supplier'
-        and gl.is_cancelled = 0 {condition}
-        GROUP BY doc.name
-        Having
-        amount > 0
-        ORDER BY doc.posting_date
-        """.format(condition=condition or ""),
-        {"party": tuple(party)},
-        as_dict=True,)
+    condition = payment_reconciliation.get_conditions()
+    voucher_type = "Purchase Invoice"
+    doc = qb.DocType(voucher_type)
+    return_invoices = (qb.from_(doc)
+        .select(ConstantColumn(voucher_type).as_("voucher_type"), doc.name.as_("voucher_no"))
+        .where(
+            (doc.docstatus == 1)
+            & (doc["Supplier"] == "Supplier")
+            & (doc.is_return == 1)
+            & (IfNull(doc.return_against, "") == "")
+        )
+        .run(as_dict=True)
+    )
+    return return_invoices
 
 
 def get_outstanding_invoices(party, filters=None):
@@ -189,7 +183,7 @@ def get_outstanding_invoices(party, filters=None):
     held_invoices = set(d["name"] for d in held_invoices)
 
     invoice_list = frappe.db.sql(
-        """
+        """T
         select
             voucher_no, voucher_type, posting_date, due_date,
             ifnull(sum(credit_in_account_currency - debit_in_account_currency), 0) as invoice_amount,
@@ -236,9 +230,8 @@ def get_outstanding_invoices(party, filters=None):
                     filters
                     and filters.get("outstanding_amt_greater_than")
                     and not (
-                    outstanding_amount >= filters.get("outstanding_amt_greater_than")
-                    and outstanding_amount <= filters.get("outstanding_amt_less_than")
-            )
+                    filters.get("outstanding_amt_greater_than") <= outstanding_amount <= filters.get("outstanding_amt_less_than")
+                )
             ):
                 continue
 
