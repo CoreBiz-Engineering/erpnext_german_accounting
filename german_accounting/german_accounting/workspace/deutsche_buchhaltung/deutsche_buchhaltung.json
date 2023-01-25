@@ -1,31 +1,34 @@
 {
- "category": "Modules",
- "charts": [],
- "creation": "2022-02-15 13:30:50.276524",
- "developer_mode_only": 0,
- "disable_user_customization": 0,
+ "charts": [
+  {
+   "chart_name": "Outgoing Bills (Sales Invoice)",
+   "label": "Outgoing Bills (Sales Invoice)"
+  }
+ ],
+ "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Deutsche Buchhaltung</span>\",\"col\":12}},{\"type\":\"chart\",\"data\":{\"chart_name\":\"Outgoing Bills (Sales Invoice)\",\"col\":12}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Op List\",\"col\":4}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Umsatzsteuer Voranmeldung\",\"col\":4}},{\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Summen Und Salden (Susa)\",\"col\":4}},{\"type\":\"spacer\",\"data\":{\"col\":12}},{\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Sales Invoice\",\"col\":4}},{\"type\":\"quick_list\",\"data\":{\"quick_list_name\":\"Journal Entry\",\"col\":4}},{\"type\":\"spacer\",\"data\":{\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Jahresabschluss &amp; Buchungsmaske\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Deutsche Buchhaltung Einstellungen\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Forderungen\",\"col\":4}}]",
+ "creation": "2023-01-24 11:52:01.399603",
  "docstatus": 0,
  "doctype": "Workspace",
- "extends_another_page": 0,
+ "for_user": "",
  "hide_custom": 0,
+ "icon": "money-coins-1",
  "idx": 0,
- "is_default": 0,
- "is_standard": 1,
+ "is_hidden": 0,
  "label": "Deutsche Buchhaltung",
  "links": [
   {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Reports",
-   "link_type": "DocType",
+   "link_count": 5,
    "onboard": 0,
-   "only_for": "",
    "type": "Card Break"
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
+   "is_query_report": 0,
    "label": "OP-Liste",
+   "link_count": 0,
    "link_to": "OP List",
    "link_type": "Report",
    "onboard": 0,
@@ -33,18 +36,19 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
+   "is_query_report": 0,
    "label": "Umsatzsteuer Voranmeldung",
+   "link_count": 0,
    "link_to": "Umsatzsteuer Voranmeldung",
    "link_type": "Report",
    "onboard": 0,
-   "only_for": "",
    "type": "Link"
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
+   "is_query_report": 0,
    "label": "Betriebswirtschaftliche Auswertung",
+   "link_count": 0,
    "link_to": "Betriebswirtschaftliche Auswertungen",
    "link_type": "Report",
    "onboard": 0,
@@ -52,38 +56,37 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
-   "label": "Summen & Saldenliste",
+   "is_query_report": 0,
+   "label": "Summen &amp; Saldenliste",
+   "link_count": 0,
    "link_to": "Summen und Salden (SuSa)",
    "link_type": "Report",
    "onboard": 0,
-   "only_for": "",
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Accounting Summary Report",
-   "link_to": "Accounting Summary Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "only_for": "",
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Jahresabschluss & Buchungsmaske",
-   "link_to": "",
-   "link_type": "DocType",
+   "label": "Zusammenfassende Meldung",
+   "link_count": 0,
+   "link_to": "Accounting Summary Report",
+   "link_type": "Report",
    "onboard": 0,
-   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Jahresabschluss &amp; Buchungsmaske",
+   "link_count": 3,
+   "onboard": 0,
    "type": "Card Break"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Jahresabschluss",
+   "link_count": 0,
    "link_to": "Annual Financial Statement",
    "link_type": "DocType",
    "onboard": 0,
@@ -93,36 +96,35 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Jahresabschluss Log",
+   "link_count": 0,
    "link_to": "Annual Financial Statement Log",
    "link_type": "DocType",
    "onboard": 0,
-   "only_for": "",
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Buchungen (Sage-Maske)",
+   "link_count": 0,
    "link_to": "buchungen",
    "link_type": "Page",
    "onboard": 0,
-   "only_for": "",
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Deutsche Buchhaltung Einstellungen",
-   "link_to": "",
-   "link_type": "DocType",
+   "link_count": 6,
    "onboard": 0,
-   "only_for": "",
    "type": "Card Break"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Jahresabschluss Einstellungen",
+   "link_count": 0,
    "link_to": "Annual Financial Statement Setting",
    "link_type": "DocType",
    "onboard": 0,
@@ -132,6 +134,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Umsatzsteuer Voranmeldung Konten",
+   "link_count": 0,
    "link_to": "UStVA",
    "link_type": "DocType",
    "onboard": 0,
@@ -141,6 +144,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "BWA Konten",
+   "link_count": 0,
    "link_to": "BWA",
    "link_type": "DocType",
    "onboard": 0,
@@ -150,6 +154,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "BWA Konten Kurzbericht",
+   "link_count": 0,
    "link_to": "BWA Kurzbericht",
    "link_type": "DocType",
    "onboard": 0,
@@ -159,79 +164,134 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Deutsche Steuercodes",
+   "link_count": 0,
    "link_to": "Steuercodes",
    "link_type": "DocType",
    "onboard": 0,
-   "only_for": "",
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Accounting Summary Report Settings",
+   "label": "ZM-Report Einstellungen",
+   "link_count": 0,
    "link_to": "Accounting Summary Report",
    "link_type": "DocType",
    "onboard": 0,
-   "only_for": "",
    "type": "Link"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Sonstiges",
-   "link_to": "",
-   "link_type": "DocType",
+   "label": "Forderungen",
+   "link_count": 6,
    "onboard": 0,
-   "only_for": "",
    "type": "Card Break"
   },
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Bankzuordnung (CSV-Import Log)",
-   "link_to": "Bank Assignment",
+   "label": "Verkaufsrechnung",
+   "link_count": 0,
+   "link_to": "Sales Invoice",
    "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer",
+   "link_count": 0,
+   "link_to": "Customer",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Entry",
+   "link_count": 0,
+   "link_to": "Payment Entry",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payment Reconciliation",
+   "link_count": 0,
+   "link_to": "Payment Reconciliation Allocation",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounts Receivable",
+   "link_count": 0,
+   "link_to": "Accounts Receivable",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounts Receivable Summary",
+   "link_count": 0,
+   "link_to": "Accounts Receivable Summary",
+   "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2022-10-25 09:36:48.139595",
+ "modified": "2023-01-25 15:44:15.032786",
  "modified_by": "Administrator",
  "module": "German Accounting",
  "name": "Deutsche Buchhaltung",
  "owner": "Administrator",
- "pin_to_bottom": 0,
- "pin_to_top": 1,
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [
+  {
+   "document_type": "Sales Invoice",
+   "label": "Sales Invoice",
+   "quick_list_filter": "{\"status\":[\"=\",\"Draft\"]}"
+  },
+  {
+   "document_type": "Journal Entry",
+   "label": "Journal Entry",
+   "quick_list_filter": "{\"docstatus\":[\"=\",\"0\"]}"
+  }
+ ],
+ "roles": [],
+ "sequence_id": 2.0,
  "shortcuts": [
   {
-   "doc_view": "",
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Op List",
+   "link_to": "OP List",
+   "type": "Report"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
    "label": "Umsatzsteuer Voranmeldung",
    "link_to": "Umsatzsteuer Voranmeldung",
    "type": "Report"
   },
   {
-   "doc_view": "",
-   "label": "Betriebswirtschaftliche Auswertungen",
-   "link_to": "Betriebswirtschaftliche Auswertungen",
-   "type": "Report"
-  },
-  {
-   "doc_view": "",
-   "label": "SuSa",
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Summen Und Salden (Susa)",
    "link_to": "Summen und Salden (SuSa)",
    "type": "Report"
-  },
-  {
-   "doc_view": "",
-   "label": "OP List",
-   "link_to": "OP List",
-   "type": "Report"
-  },
-  {
-   "doc_view": "",
-   "label": "Buchungen",
-   "link_to": "buchungen",
-   "type": "Page"
   }
- ]
+ ],
+ "title": "Deutsche Buchhaltung"
 }
