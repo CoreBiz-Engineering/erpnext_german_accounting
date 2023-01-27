@@ -183,7 +183,7 @@ def get_outstanding_invoices(party, filters=None):
     held_invoices = set(d["name"] for d in held_invoices)
 
     invoice_list = frappe.db.sql(
-        """T
+        """
         select
             voucher_no, voucher_type, posting_date, due_date,
             ifnull(sum(credit_in_account_currency - debit_in_account_currency), 0) as invoice_amount,
