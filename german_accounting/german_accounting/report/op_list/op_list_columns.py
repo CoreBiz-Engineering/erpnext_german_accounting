@@ -20,7 +20,7 @@ def get_customer_columns():
             "label": _("Customer Name"),
             "fieldname": "customer_name",
             "fieldtype": "Data",
-            "width": "50px",
+            "width": "250px",
         },
         {"label": _("Voucher Type"), "fieldname": "voucher_type", "width": 120},
         {"label": _("Voucher Type"), "fieldname": "voucher_type_hidden", "hidden": 1, "width": 120},

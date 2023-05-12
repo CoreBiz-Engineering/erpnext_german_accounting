@@ -15,7 +15,6 @@ from frappe import _
 def execute(filters=None):
     """Entry point for frappe."""
     result = {}
-    print("FILTERS: ", filters)
     validate_filters(filters)
     if filters.get('view') == 'Kontenansicht':
         result = get_kontenansicht(filters)
@@ -224,7 +223,6 @@ def calc_group_sum(gl_entries):
     for mark in gl_entries:
         if mark.get('mark') not in mark_list:
             mark_list.append(mark.get('mark'))
-    print(mark_list)
     res = []
     tax_res = 0
     for mark in mark_list:
@@ -255,7 +253,7 @@ def calc_group_sum(gl_entries):
         else:
             s_h = ''
 
-        if row == '59':
+        if row in ['59','65']:
             res.append(
                 {
                     'row': row,
@@ -365,8 +363,7 @@ def get_kontenansicht(filters):
             try:
                 entry['tax_value'] = round(entry.get('account_value') * tax,2)
             except:
-                print('##################### ERROR #####################')
-                print(entry)
+                continue
         if entry.get('mark') == entry.get('tax_mark'):
             entry.pop('account_value')
             entry.pop('mark')

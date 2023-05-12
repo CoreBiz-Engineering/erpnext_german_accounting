@@ -16,7 +16,6 @@ def execute(filters=None):
 	validate_filters(filters)
 	columns = get_columns()
 	data = get_data(filters)
-	print(data)
 	return columns, data
 
 
@@ -65,8 +64,7 @@ def get_columns():
 	return columns
 
 def get_data(filters):
-	print(filters.get('from_date'))
-	print(filters.get('to_date'))
+
 	sql = 	"""
 			select
 				name as "invoice_number",

@@ -29,7 +29,6 @@ frappe.query_reports["Profit Account Check"] = {
 
                 }
             });
-            console.log(selected_rows);
             if (selected_rows.length >= 1) {
                 frappe.call({
                     method: "german_accounting.german_accounting.report.profit_account_check.profit_account_check.submit_invoice",
@@ -42,7 +41,6 @@ frappe.query_reports["Profit Account Check"] = {
                         $('.dt-scrollable').find(":input[type=checkbox]").prop("checked", false);
                         $('div.dt-row--highlight').removeClass('dt-row--highlight');
                         $('span.dt-toast__message').remove();
-                        console.log("after refresh");
                     }
                 })
             }
@@ -59,7 +57,6 @@ frappe.query_reports["Profit Account Check"] = {
                             selected_rows3.push(index)
                         }
                     });
-                    console.log(selected_rows3);
                 }
             }
         });

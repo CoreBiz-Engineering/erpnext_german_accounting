@@ -13,17 +13,13 @@ frappe.ui.form.on('Annual Financial Statement', {
             frm.trigger("get_entries");
         } else if (frm.doc.annual_report_type === "Aktiva/Passiva") {
             frm.trigger("get_entries");
-        } else {
-            console.log("Nichts");
         }
     },
     create_closing: function (frm) {
         frm.save_entries = 1;
-        console.log("create the closing");
         frm.trigger("get_entries");
     },
     get_entries: function (frm) {
-        console.log(frm.doc.annual_report_type);
         if (frm.doc.annual_report_type === "Debitor" || frm.doc.annual_report_type === "Kreditor"){
             frappe.call({
                 doc: me.frm.doc,
@@ -32,9 +28,6 @@ frappe.ui.form.on('Annual Financial Statement', {
                     account_type: frm.doc.annual_report_type,
                     fiscal_year: frm.doc.fiscal_year,
                     submit: frm.save_entries
-                },
-                callback: function (r) {
-                    console.log(r.message);
                 }
             })
         }

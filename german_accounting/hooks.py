@@ -27,7 +27,8 @@ app_license = "MIT"
 
 # include js in doctype views
 doctype_js = {
-    "Payment Entry": "public/js/payment_entry.js"
+    "Payment Entry": "public/js/payment_entry.js",
+	"Dunning" : "public/js/dunning.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -84,13 +85,11 @@ fixtures = ["Steuercodes", "UStVA", "BWA", "BWA Kurzbericht"]
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+    "Journal Entry": {
+        "on_submit": "german_accounting.german_accounting.doctype.custom.journal_entry.set_invoice_status",
+    }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -120,9 +119,9 @@ fixtures = ["Steuercodes", "UStVA", "BWA", "BWA Kurzbericht"]
 
 # Overriding Methods
 # ------------------------------
-jenv = {
+jinja = {
     "methods": [
-        "get_last_bank_entry:german_accounting.german_accounting.doctype.custom.custom.get_last_bank_entry",
+        "german_accounting.german_accounting.doctype.custom.custom.get_last_bank_entry",
     ]
 }
 # override_whitelisted_methods = {
