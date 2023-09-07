@@ -13,8 +13,6 @@ from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import g
 from .bank_file_reader import read_csv_file
 from .op_supplier import get_supplier_data
 from erpnext.accounts.party import get_party_details
-
-
 def execute(filters=None):
     if filters.get("attach"):
         return read_csv_file(filters.get("attach"))
@@ -31,24 +29,23 @@ def execute(filters=None):
         else:
             args = {}
         return ReceivableSumCustomerReport(filters).run(args)
-
 class ReceivableSumCustomerReport(object):
     def __init__(self, filters=None):
         self.data = []
         self.columns = []
         self.filters = frappe._dict(filters or {})
         self.filters.report_date = getdate(self.filters.report_date or nowdate())
-        self.age_as_on = getdate(nowdate()) if self.filters.report_date > getdate(nowdate()) else self.filters.report_date
-
+        self.age_as_on = getdate(nowdate()) if self.filters.report_date > getdate(
+            nowdate()) else self.filters.report_date
     def run(self, args):
         self.dunning_columns = []
         self.filters.update(args)
         self.set_defaults()
         self.get_data()
-        data = sorted(self.data, key=lambda k: ("order_count" not in k, k.get("order_count", None), "posting_date" not in k, k.get("posting_date", None)))
+        data = sorted(self.data, key=lambda k: (
+        "order_count" not in k, k.get("order_count", None), "posting_date" not in k, k.get("posting_date", None)))
         self.columns = self.columns + self.dunning_columns
         return self.columns, data
-
     def set_defaults(self):
         if not self.filters.get("company"):
             self.filters.company = frappe.db.get_single_value('Global Defaults', 'default_company')
@@ -58,7 +55,6 @@ class ReceivableSumCustomerReport(object):
         self.party_type = self.filters.party_type
         self.party_details = {}
         self.invoices = set()
-
     def get_columns_invoice(self):
         """Return the list of columns that will be shown in query report."""
         self.columns = [
@@ -131,7 +127,6 @@ class ReceivableSumCustomerReport(object):
                 "width": "75px",
             }
         ]
-
     def get_columns_supplier(self):
         self.columns = [
             {
@@ -191,7 +186,6 @@ class ReceivableSumCustomerReport(object):
                 "fieldtype": "Currency",
                 "width": "75px",
             }]
-
     def get_data(self):
         if self.filters.get('party_type') == "Customer" or self.filters.get('party_type') == "Kunde":
             self.get_sales_inovice_data()
@@ -199,7 +193,6 @@ class ReceivableSumCustomerReport(object):
         elif self.filters.get('party_type') == "Supplier" or self.filters.get('party_type') == "Lieferant":
             self.get_supplier_data()
             self.get_columns_supplier()
-
     def get_supplier_data(self):
         self.gl_entries = self.select_journal_entry_data(self.filters.get('party_type'))
         self.data = []
@@ -289,7 +282,6 @@ class ReceivableSumCustomerReport(object):
             'order_count': order_count
         })
         return
-
     def select_journal_entry_data(self, party_type):
         table = attr = party_filter = debit_credit = p_type = party = ''
 
@@ -361,7 +353,6 @@ class ReceivableSumCustomerReport(object):
 				""".format(table=table, party_type=p_type, attr=attr, party_filter=party_filter,
                            debit_credit=debit_credit, party=party, fiscal_year=self.filters.get('fiscal_year'))
         return frappe.db.sql(sql, as_dict=1)
-
     def select_payment_entries(self, party_type):
         sql = """
 				select pe.name, pe.posting_date, pe.reference_no, pe.party, pe.party_name,
@@ -375,7 +366,6 @@ class ReceivableSumCustomerReport(object):
 				and pe.docstatus = 1
 				""".format(fiscal_year=self.filters.get('fiscal_year'))
         return frappe.db.sql(sql, as_dict=1)
-
     def get_sales_inovice_data(self):
         customer_filter = ''
         if self.filters.get('party'):
@@ -469,7 +459,8 @@ class ReceivableSumCustomerReport(object):
                                'over_due': sales_invoice.get('over_due'),
                                'invoiced_amount': sales_invoice.get('grand_total'),
                                'payment_amount': 0,
-                               'paid_amount': sales_invoice.get('grand_total') - sales_invoice.get('outstanding_amount'),
+                               'paid_amount': sales_invoice.get('grand_total') - sales_invoice.get(
+                                   'outstanding_amount'),
                                'outstanding_amount': sales_invoice.get('outstanding_amount')}
 
                     # check if dunnings are created:
@@ -532,7 +523,7 @@ class ReceivableSumCustomerReport(object):
                                'invoiced_amount': journal_entry.get('debit_in_account_currency') or 0,
                                'payment_amount': journal_entry.get('credit_in_account_currency') or 0,
                                'paid_amount': payed_val,
-							   'over_due': over_due,
+                               'over_due': over_due,
                                'outstanding_amount': outstanding_val}
                     # get orig. invoice of opening entry
                     if not frappe.db.exists("Sales Invoice", journal_entry.get("cheque_no")):
@@ -590,7 +581,6 @@ class ReceivableSumCustomerReport(object):
              'paid_amount': '',
              'outstanding_amount': ''}
         )
-
     def get_old_dunnings(self, sales_invoice):
         sql = '''
 				select *
@@ -618,7 +608,6 @@ class ReceivableSumCustomerReport(object):
             return stages
         else:
             return
-
 def get_last_dunning(invoice):
     sql = '''
 			select dunning_stage, docstatus
@@ -637,7 +626,6 @@ def get_last_dunning(invoice):
     else:
         stage = {"dunning_stage": 1, "docstatus": 0}
     return stage
-
 @frappe.whitelist()
 def select_overdue_days(invoice):
     sql = '''
@@ -648,7 +636,6 @@ def select_overdue_days(invoice):
 			'''.format(invoice)
 
     return frappe.db.sql(sql, as_dict=1)[0]
-
 @frappe.whitelist()
 def get_dunning_items_data(invoice):
     result = {'stage': 0}
@@ -659,7 +646,6 @@ def get_dunning_items_data(invoice):
         result['stage'] = dunning_items.get('dunning_stage')
     result.update(select_overdue_days(invoice))
     return result
-
 def get_opening_invoice(doc):
     if not frappe.db.exists("Journal Entry", doc):
         return
@@ -671,7 +657,6 @@ def get_opening_invoice(doc):
         invoice = get_opening_invoice(je_entry.cheque_no)
         if frappe.db.exists("Sales Invoice", invoice):
             return invoice
-
 @frappe.whitelist()
 def create_dunning(doc_list=None, company=None):
     if not doc_list:
@@ -737,17 +722,15 @@ def create_dunning(doc_list=None, company=None):
 
         dunning.insert()
     return {'change': 1}
-
 def get_skonto_account(account_no):
     '''
-	Gewaehrte Skonto
-	16% = 8735 | 19% = 8736
-	erhaltene Skonto
-	16% = 3737 | 19% = 3736
-	'''
+    Gewaehrte Skonto
+    16% = 8735 | 19% = 8736
+    erhaltene Skonto
+    16% = 3737 | 19% = 3736
+    '''
     sql = """select name from `tabAccount` where account_number = '%s'""" % account_no
     return frappe.db.sql(sql, as_dict=1)[0].get('name')
-
 @frappe.whitelist()
 def create_payment(voucher_list, party_type, bank, value, posting_date, skonto, remark, allocate=0):
     if not bank or not posting_date:
@@ -948,8 +931,10 @@ def create_payment(voucher_list, party_type, bank, value, posting_date, skonto, 
                     if not customer and not entry_account:
                         frappe.throw("Kein Kunde in der Buchung zu finden.")
 
-                    if float(value): debit_value = value
-                    else: debit_value = debit
+                    if float(value):
+                        debit_value = value
+                    else:
+                        debit_value = debit
 
                     if float(value) > debit:
                         reference_no = j_entry.cheque_no
@@ -1228,14 +1213,13 @@ def create_payment(voucher_list, party_type, bank, value, posting_date, skonto, 
                 row.reference_doctype = "Purchase Invoice"
                 row.reference_name = p_invoice.name
                 row.total_amount = p_invoice.grand_total
-                row.outstanding_amount = p_invoice.outstanding_amount
+                row.outstanding_amount = payed_total
                 row.allocated_amount = payed_total
                 p_entry.save()
     # payment.submit()
     else:
         pass
     return
-
 def create_allocation(allocation, reference_type, reference_name, invoice_type, invoice_number, amount):
     # create allocation list for payment reconciliation
     allocation.reference_type = reference_type
@@ -1244,7 +1228,6 @@ def create_allocation(allocation, reference_type, reference_name, invoice_type, 
     allocation.invoice_number = invoice_number
     allocation.allocated_amount = amount
     return allocation
-
 def return_reconciliation(j_entry, c_note, voucher, total_credit, value, bank):
     if voucher.outstanding_amount <= total_credit:
         create_journal_entry(j_entry, voucher=voucher, credit=voucher.outstanding_amount)
@@ -1285,7 +1268,6 @@ def return_reconciliation(j_entry, c_note, voucher, total_credit, value, bank):
         outstanding_entry.save()
 
     return total_credit
-
 def payment_entry_row(p_entry, c_note):
     row = p_entry.append("references", {})
     row.reference_doctype = c_note.doctype
@@ -1293,7 +1275,6 @@ def payment_entry_row(p_entry, c_note):
     row.due_date = c_note.due_date
     row.total_amount = c_note.grand_total
     row.outstanding_amount = row.allocated_amount = c_note.outstanding_amount
-
 def create_journal_entry(j_entry, voucher={}, bank="", debit=0, credit=0, value=0):
     row = j_entry.append("accounts", {})
 
@@ -1326,7 +1307,6 @@ def create_journal_entry(j_entry, voucher={}, bank="", debit=0, credit=0, value=
         row.debit_in_account_currency = value
         row.debit = value
     return row
-
 def payment_reconciliation(payment, voucher_list, bank, posting_date, value=0):
     reconcile = frappe.get_doc("Payment Reconciliation")
     reconcile.company = frappe.defaults.get_user_default("Company")
@@ -1376,7 +1356,6 @@ def payment_reconciliation(payment, voucher_list, bank, posting_date, value=0):
             create_journal_entry(journal_entry, invoice, credit=invoice.outstanding_amount)
             create_journal_entry(journal_entry, bank=bank, debit=invoice.outstanding_amount)
             journal_entry.save()
-
 def create_invoices():
     # create invoices list for payment reconciliation
     return

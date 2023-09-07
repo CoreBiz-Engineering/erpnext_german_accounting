@@ -105,7 +105,7 @@ frappe.query_reports["OP List"] = {
         },
         {
             "label": __("Buchungsbetrag"),
-            "fieldname": "value",
+            "fieldname": "vlaue",
             "fieldtype": "Float",
             on_change: function() {}
         },
@@ -149,16 +149,12 @@ frappe.query_reports["OP List"] = {
                 $("div[data-fieldname='attach']").addClass('col-md-4').removeClass('col-md-2');
                 if (frappe.query_report.get_filter_value('attach')) {
                     $("button[data-label='Create%20Payment']").hide();
-                    $("button[data-label='Mahnung%20Erstellen']").hide();
-                    $("button[data-label='Zahlung%20Abgleichen']").hide();
                     $("button[data-label='Create%20Dunning']").hide();
                     $("button[data-label='Bankabgleich']").show();
                 } else {
                     $("button[data-label='Bankabgleich']").hide();
                     $("button[data-label='Create%20Payment']").show();
                     $("button[data-label='Create%20Dunning']").show();
-                    $("button[data-label='Mahnung%20Erstellen']").show();
-                    $("button[data-label='Zahlung%20Abgleichen']").show();
                 }
 
 
@@ -166,6 +162,8 @@ frappe.query_reports["OP List"] = {
         },
     ],
     onload: function(report) {
+        // not the peferct but fastest way
+        //$('div[class="container page-body"]').width('95%')
         frappe.query_report.page.add_inner_button(__("Bankabgleich"), function() {
             var selected_rows = [];
             //collect all checked checkboxes
@@ -203,8 +201,7 @@ frappe.query_reports["OP List"] = {
             frappe.call({
                 method: "german_accounting.german_accounting.report.op_list.op_list.create_dunning",
                 args: {
-                    doc_list: selected_rows,
-                    company: frappe.query_report.get_filter_value('company')
+                    sales_invoices: selected_rows
                 },
                 callback: function() {
                     frappe.query_report.refresh()
@@ -230,18 +227,20 @@ frappe.query_reports["OP List"] = {
                     voucher_list: selected_rows,
                     party_type: frappe.query_report.get_filter_value('party_type'),
                     bank: frappe.query_report.get_filter_value('bank'),
-                    value: frappe.query_report.get_filter_value('value'),
+                    value: frappe.query_report.get_filter_value('vlaue'),
                     posting_date: frappe.query_report.get_filter_value('posting_date'),
                     skonto: frappe.query_report.get_filter_value('skonto'),
                     remark: frappe.query_report.get_filter_value('remark'),
                     allocate: frappe.query_report.get_filter_value('allocate'),
                 },
-                callback: function(r) {
+                callback: function() {
+                    //$('.dt-scrollable').find(":input[type=checkbox]").prop("checked", false);
+                    //$('div.dt-row--highlight').removeClass('dt-row--highlight');
+                    //$('span.dt-toast__message').remove();
+                    frappe.msgprint("Buchung(en) wurden erstellt.");
                     frappe.query_report.datatable.rowmanager.checkAll();
                     frappe.query_report.set_filter_value("remark", "");
                     frappe.query_report.set_filter_value("allocate", 0);
-                    frappe.query_report.set_filter_value("value", 0);
-                    //frappe.query_report.set_filter_value("select_total", 0);
                 }
             });
         });
@@ -260,9 +259,19 @@ frappe.query_reports["OP List"] = {
                             }
                         }
                     });
+                    //$('span.dt-toast__message').remove();
                     frappe.query_report.set_filter_value("select_total", total_checked);
                 },
             }
         });
     }
 };
+
+/*erpnext.dimension_filters.forEach((dimension) => {
+    frappe.query_reports["Accounts Receivable"].filters.splice(9, 0 ,{
+        "fieldname": dimension["fieldname"],
+        "label": __(dimension["label"]),
+        "fieldtype": "Link",
+        "options": dimension["document_type"]
+    });
+});*/

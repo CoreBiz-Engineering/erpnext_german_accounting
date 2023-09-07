@@ -135,8 +135,8 @@ def get_jv_entries(party, fiscal_year=None):
     payment_reconciliation = frappe.new_doc("Payment Reconciliation")
     condition = payment_reconciliation.get_conditions()
 
-    condition = condition.replace("company", "t1.company")
     if fiscal_year:
+        condition = condition.replace("company", "t1.company")
         condition += " and gl.fiscal_year = '%s'" % fiscal_year
 
     journal_entries = frappe.db.sql(
@@ -273,7 +273,7 @@ def get_outstanding_invoices(party, fiscal_year=None, filters=None):
         payment_amount = pe_map.get((d.voucher_type, d.voucher_no), 0)
         outstanding_amount = flt(d.invoice_amount - payment_amount, precision)
         if outstanding_amount > 0.5 / (10 ** precision):
-            if (filters and filters.get("outstanding_amt_greater_than") and not (filters.get("outstanding_amt_greater_than") <= outstanding_amount <= filters.get("outstanding_amt_less_than"))):
+            if (filters.get("outstanding_amt_greater_than") and not (filters.get("outstanding_amt_greater_than") <= outstanding_amount <= filters.get("outstanding_amt_less_than"))):
                 continue
 
             if not d.voucher_type == "Purchase Invoice" or d.voucher_no not in held_invoices:

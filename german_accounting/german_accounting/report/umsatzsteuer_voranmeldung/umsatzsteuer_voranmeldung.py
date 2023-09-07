@@ -15,6 +15,7 @@ from frappe import _
 def execute(filters=None):
     """Entry point for frappe."""
     result = {}
+    validate_filters(filters)
     if filters.get('view') == 'Kontenansicht':
         result = get_kontenansicht(filters)
 
@@ -367,7 +368,8 @@ def get_kontenansicht(filters):
             try:
                 entry['tax_value'] = round(entry.get('account_value') * tax,2)
             except:
-                frappe.throw(_("Tax error"))
+                continue
+
         if entry.get('mark') == entry.get('tax_mark'):
             entry.pop('account_value')
             entry.pop('mark')

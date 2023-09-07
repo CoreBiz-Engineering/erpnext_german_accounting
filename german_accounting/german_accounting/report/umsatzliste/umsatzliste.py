@@ -72,7 +72,6 @@ def get_data(filters):
 	created_on = ""
 	if filters.get('created_on'):
 		created_on = "and DATE_FORMAT(creation, '%Y-%m-%d') = DATE_FORMAT('{created_on}', '%Y-%m-%d')".format(created_on=filters.get('created_on'))
-
 	sql = 	"""
 			select
 				name as "invoice_number",

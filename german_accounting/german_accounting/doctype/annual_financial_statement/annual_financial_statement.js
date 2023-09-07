@@ -30,10 +30,7 @@ frappe.ui.form.on('Annual Financial Statement', {
                     account_type: frm.doc.annual_report_type,
                     fiscal_year: frm.doc.fiscal_year,
                     submit: frm.save_entries
-                },
-                /*callback: function (r) {
-                    console.log(r.message);
-                }*/
+                }
             })
         }
     }

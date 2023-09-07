@@ -6,10 +6,7 @@ frappe.ui.form.on('Payment Entry', {
 					method: "german_accounting.german_accounting.doctype.custom.payment_entry.create_reverse_entry",
 					args: {
 						doc: frm.doc
-					},
-					/*callback: function (r){
-						console.log("called back.");
-					}*/
+					}
 				})
 			});
 		}

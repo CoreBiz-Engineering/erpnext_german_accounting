@@ -187,6 +187,7 @@ def read_csv_file(file_url):
 
 def check_bank_account(row, doctype):
     bank_account = frappe.get_list("Bank Account", filters={"iban": row.get("IBAN Zahlungsbeteiligter")})
+
     if not bank_account:
         bank_account = frappe.get_doc({"doctype": "Bank Account"})
         bank_account.bank = "Kunden Bank"

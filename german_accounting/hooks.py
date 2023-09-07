@@ -122,9 +122,9 @@ doc_events = {
 
 # Overriding Methods
 # ------------------------------
-jenv = {
+jinja = {
     "methods": [
-        "get_last_bank_entry:german_accounting.german_accounting.doctype.custom.custom.get_last_bank_entry",
+        "german_accounting.german_accounting.doctype.custom.custom.get_last_bank_entry",
     ]
 }
 # override_whitelisted_methods = {
