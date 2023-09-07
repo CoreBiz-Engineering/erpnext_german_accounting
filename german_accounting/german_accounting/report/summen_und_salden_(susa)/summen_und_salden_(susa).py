@@ -117,6 +117,8 @@ def get_opening_entries(year, party):
 	entries = select_opening_entries(year, party)
 
 	for entry in entries:
+		entry['opening_value'] = entry.get('opening_debit') - entry.get('opening_credit')
+		"""
 		if entry.get('opening_debit') and not entry.get('opening_credit'):
 			entry['opening_s_h'] = 'S'
 			entry['opening_value'] = entry.get('opening_debit')
@@ -130,6 +132,7 @@ def get_opening_entries(year, party):
 		elif entry.get('opening_debit') < entry.get('opening_credit'):
 			entry['opening_value'] = entry.get('opening_credit') - entry.get('opening_debit')
 			entry['opening_s_h'] = 'H'
+		"""
 
 
 	return entries
@@ -238,11 +241,11 @@ def get_account_data(opening, monthly, party):
 				if entry.get('account_number') < 1000 and i == 0:
 					entry["index"] = i
 					sum_ope_d += entry.get('opening_debit', 0)
-					sum_ope_c += entry.get('opening_credit', 0)
+					sum_ope_c -= entry.get('opening_credit', 0)
 					sum_mon_d += entry.get('month_debit', 0)
-					sum_mon_c += entry.get('month_credit', 0)
+					sum_mon_c -= entry.get('month_credit', 0)
 					sum_cum_d += entry.get('cumulative_debit', 0)
-					sum_cum_c += entry.get('cumulative_credit', 0)
+					sum_cum_c -= entry.get('cumulative_credit', 0)
 					sum_sal_d += entry.get('saldo', 0) if entry.get('saldo_s_h') == "S" else 0
 					sum_sal_c -= entry.get('saldo', 0) if entry.get('saldo_s_h') == "H" else 0
 					period_sum += entry.get('period_total', 0)
@@ -250,11 +253,11 @@ def get_account_data(opening, monthly, party):
 				elif str(entry.get('account_number')).startswith(str(i)) and entry.get('account_number') >= 1000:
 					entry["index"] = i
 					sum_ope_d += entry.get('opening_debit', 0)
-					sum_ope_c += entry.get('opening_credit', 0)
+					sum_ope_c -= entry.get('opening_credit', 0)
 					sum_mon_d += entry.get('month_debit', 0)
-					sum_mon_c += entry.get('month_credit', 0)
+					sum_mon_c -= entry.get('month_credit', 0)
 					sum_cum_d += entry.get('cumulative_debit', 0)
-					sum_cum_c += entry.get('cumulative_credit', 0)
+					sum_cum_c -= entry.get('cumulative_credit', 0)
 					sum_sal_d += entry.get('saldo', 0) if entry.get('saldo_s_h') == "S" else 0
 					sum_sal_c -= entry.get('saldo', 0) if entry.get('saldo_s_h') == "H" else 0
 					period_sum += entry.get('period_total', 0)
@@ -267,10 +270,11 @@ def get_account_data(opening, monthly, party):
 
 				sum_sal = 0
 				sum_sal_s_h = ""
+				s_h = ""
 				if sum_sal_d or sum_sal_c:
 					sum_sal = sum_sal_d + sum_sal_c
 					if sum_sal < 0:
-						sum_sal = sum_sal * (-1)
+						# sum_sal = sum_sal * (-1)
 						sum_sal_s_h = "H"
 					else:
 						sum_sal_s_h = "S"
@@ -279,9 +283,9 @@ def get_account_data(opening, monthly, party):
 					if sum_ope_d:
 						opening_sum += sum_ope_d
 					if sum_ope_c:
-						opening_sum -= sum_ope_c
+						opening_sum += sum_ope_c
 					s_h = "H" if opening_sum < 0 else "S"
-					opening_sum = opening_sum * (-1) if opening_sum < 0 else opening_sum
+					# opening_sum = opening_sum * (-1) if opening_sum < 0 else opening_sum
 
 				sum_list += [{'index': i + 0.1},
 							 {'index': i + 0.2, 'opening_value': opening_sum, 'opening_s_h': s_h, 'month_debit': sum_mon_d,
@@ -324,7 +328,7 @@ def get_account_data(opening, monthly, party):
 			if sum_sal_d or sum_sal_c:
 				sum_sal = sum_sal_d + sum_sal_c
 				if sum_sal < 0:
-					sum_sal = sum_sal * (-1)
+					# sum_sal = sum_sal * (-1)
 					sum_sal_s_h = "H"
 				else:
 					sum_sal_s_h = "S"
@@ -370,10 +374,12 @@ def calculate_saldo(entries):
 
 
 		if saldo < 0 and entry.get('saldo_s_h') == "S":
-			entry['saldo'] = saldo * (-1)
+			# entry['saldo'] = saldo * (-1)
+			entry['saldo'] = saldo
 			entry['saldo_s_h'] = "H"
 		elif saldo < 0 and entry.get('saldo_s_h') == "H":
-			entry['saldo'] = saldo * (-1)
+			# entry['saldo'] = saldo * (-1)
+			entry['saldo'] = saldo
 			entry['saldo_s_h'] = "S"
 		else:
 			entry['saldo'] = saldo

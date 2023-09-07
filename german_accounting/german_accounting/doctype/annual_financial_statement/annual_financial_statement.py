@@ -157,6 +157,7 @@ class AnnualFinancialStatement(Document):
 				SELECT
 					gl1.name,
 					gl1.account,
+					gl1.voucher_type,
 					gl1.voucher_no,
 					gl1.against_voucher,
 					gl1.debit,
@@ -200,6 +201,7 @@ class AnnualFinancialStatement(Document):
 						SELECT
 							gl1.name,
 							gl1.account,
+							gl1.voucher_type,
 							gl1.voucher_no,
 							gl1.against_voucher,
 							gl1.debit,

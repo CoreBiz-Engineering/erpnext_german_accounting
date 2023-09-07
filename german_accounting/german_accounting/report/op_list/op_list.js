@@ -11,7 +11,15 @@ frappe.query_reports["OP List"] = {
             "fieldtype": "Link",
             "options": "Company",
             "reqd": 1,
+            "hidden": 1,
             "default": frappe.defaults.get_user_default("Company")
+        },
+        {
+            "fieldname": "fiscal_year",
+            "label": __("Fiscal Year"),
+            "fieldtype": "Link",
+            "options": "Fiscal Year",
+            "default:": "2023"
         },
         {
             "fieldname":"party_type",
@@ -97,7 +105,7 @@ frappe.query_reports["OP List"] = {
         },
         {
             "label": __("Buchungsbetrag"),
-            "fieldname": "vlaue",
+            "fieldname": "value",
             "fieldtype": "Float",
             on_change: function() {}
         },
@@ -141,12 +149,16 @@ frappe.query_reports["OP List"] = {
                 $("div[data-fieldname='attach']").addClass('col-md-4').removeClass('col-md-2');
                 if (frappe.query_report.get_filter_value('attach')) {
                     $("button[data-label='Create%20Payment']").hide();
+                    $("button[data-label='Mahnung%20Erstellen']").hide();
+                    $("button[data-label='Zahlung%20Abgleichen']").hide();
                     $("button[data-label='Create%20Dunning']").hide();
                     $("button[data-label='Bankabgleich']").show();
                 } else {
                     $("button[data-label='Bankabgleich']").hide();
                     $("button[data-label='Create%20Payment']").show();
                     $("button[data-label='Create%20Dunning']").show();
+                    $("button[data-label='Mahnung%20Erstellen']").show();
+                    $("button[data-label='Zahlung%20Abgleichen']").show();
                 }
 
 
@@ -154,14 +166,11 @@ frappe.query_reports["OP List"] = {
         },
     ],
     onload: function(report) {
-        // not the peferct but fastest way
-        //$('div[class="container page-body"]').width('95%')
         frappe.query_report.page.add_inner_button(__("Bankabgleich"), function() {
             var selected_rows = [];
             //collect all checked checkboxes
             $('.dt-scrollable').find(":input[type=checkbox]").each((idx, row) => {
                 if(row.checked){
-                    console.log("*** selected row id : " + (idx), frappe.query_report.data[idx].voucher_no);
                     var data = frappe.query_report.data[idx]
                     selected_rows.push({
                         "voucher_no": data.sales_invoice,
@@ -172,7 +181,6 @@ frappe.query_reports["OP List"] = {
                     });
                 }
             });
-            console.log("xxx", selected_rows);
             frappe.call({
                 method: "german_accounting.german_accounting.report.op_list.bank_file_reader.reconcile_bank",
                 args: {
@@ -191,12 +199,12 @@ frappe.query_reports["OP List"] = {
                     selected_rows.push(frappe.query_report.data[index].voucher_no);
                 }
             });
-            console.log(selected_rows);
             //send invoices to backend for creating dunning:
             frappe.call({
                 method: "german_accounting.german_accounting.report.op_list.op_list.create_dunning",
                 args: {
-                    sales_invoices: selected_rows
+                    doc_list: selected_rows,
+                    company: frappe.query_report.get_filter_value('company')
                 },
                 callback: function() {
                     frappe.query_report.refresh()
@@ -222,18 +230,18 @@ frappe.query_reports["OP List"] = {
                     voucher_list: selected_rows,
                     party_type: frappe.query_report.get_filter_value('party_type'),
                     bank: frappe.query_report.get_filter_value('bank'),
-                    value: frappe.query_report.get_filter_value('vlaue'),
+                    value: frappe.query_report.get_filter_value('value'),
                     posting_date: frappe.query_report.get_filter_value('posting_date'),
                     skonto: frappe.query_report.get_filter_value('skonto'),
                     remark: frappe.query_report.get_filter_value('remark'),
                     allocate: frappe.query_report.get_filter_value('allocate'),
                 },
-                callback: function() {
-                    //$('.dt-scrollable').find(":input[type=checkbox]").prop("checked", false);
-                    //$('div.dt-row--highlight').removeClass('dt-row--highlight');
-                    //$('span.dt-toast__message').remove();
-                    frappe.msgprint("Buchung(en) wurden erstellt.");
-                    frappe.query_report.set_filter_value("select_total", 0);
+                callback: function(r) {
+                    frappe.query_report.datatable.rowmanager.checkAll();
+                    frappe.query_report.set_filter_value("remark", "");
+                    frappe.query_report.set_filter_value("allocate", 0);
+                    frappe.query_report.set_filter_value("value", 0);
+                    //frappe.query_report.set_filter_value("select_total", 0);
                 }
             });
         });
@@ -248,24 +256,13 @@ frappe.query_reports["OP List"] = {
                         if(checked) {
                             amount = parseFloat(frappe.query_report.data[index].outstanding_amount);
                             if(amount) {
-                                console.log(amount);
                                 total_checked += amount;
                             }
                         }
                     });
-                    //$('span.dt-toast__message').remove();
                     frappe.query_report.set_filter_value("select_total", total_checked);
                 },
             }
         });
     }
 };
-
-erpnext.dimension_filters.forEach((dimension) => {
-    frappe.query_reports["Accounts Receivable"].filters.splice(9, 0 ,{
-        "fieldname": dimension["fieldname"],
-        "label": __(dimension["label"]),
-        "fieldtype": "Link",
-        "options": dimension["document_type"]
-    });
-});

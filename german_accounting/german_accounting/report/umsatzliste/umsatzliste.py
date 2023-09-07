@@ -16,7 +16,6 @@ def execute(filters=None):
 	validate_filters(filters)
 	columns = get_columns()
 	data = get_data(filters)
-	print(data)
 	return columns, data
 
 
@@ -61,12 +60,19 @@ def get_columns():
 			"fieldname": "grand_total",
 			"fieldtype": "Currency",
 		},
+		{
+			"label": _("Created On"),
+			"fieldname": "created_on",
+			"fieldtype": "Date",
+		},
 	]
 	return columns
 
 def get_data(filters):
-	print(filters.get('from_date'))
-	print(filters.get('to_date'))
+	created_on = ""
+	if filters.get('created_on'):
+		created_on = "and DATE_FORMAT(creation, '%Y-%m-%d') = DATE_FORMAT('{created_on}', '%Y-%m-%d')".format(created_on=filters.get('created_on'))
+
 	sql = 	"""
 			select
 				name as "invoice_number",
@@ -75,13 +81,15 @@ def get_data(filters):
 				customer_name,
 				project,
 				net_total,
-				grand_total
+				grand_total,
+				creation as "created_on"
 			from
 				`tabSales Invoice`
 			where 
 				posting_date >= str_to_date('{dvon}', '%Y-%m-%d')
 				and posting_date <= str_to_date('{dbis}', '%Y-%m-%d')
-			""".format(dvon=filters.get('from_date'), dbis=filters.get('to_date'))
+				{created_on}
+			""".format(dvon=filters.get('from_date'), dbis=filters.get('to_date'), created_on=created_on)
 	return frappe.db.sql(sql, as_dict=1)
 
 def validate_filters(filters):

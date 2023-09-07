@@ -7,7 +7,6 @@ import datetime
 
 def execute(filters=None):
 	columns, data = [], []
-	print(filters)
 	if not (filters.month and filters.get("report_type") == "Monatsweise") and \
 			not (filters.pair and filters.get("report_type") == "Monatspaare") and \
 			not (filters.quarter and filters.get("report_type") == "Quartal") and \

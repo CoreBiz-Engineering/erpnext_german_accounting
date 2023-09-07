@@ -19,6 +19,13 @@ frappe.ui.form.on('Dunning', {
             }
         });
     },
+    customer: function (frm) {
+        erpnext.utils.get_party_details(frm,
+            "erpnext.accounts.party.get_party_details", {
+                party: frm.doc.customer,
+                party_type: "Customer",
+            });
+    },
     calculate_total_outstanding: function (frm) {
         var total = 0;
         frm.doc.dunning_item.forEach(function(d) {

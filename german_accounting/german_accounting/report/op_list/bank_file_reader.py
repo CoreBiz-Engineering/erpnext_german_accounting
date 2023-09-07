@@ -27,13 +27,7 @@ def read_csv_file(file_url):
 
         if not row.get("Buchungstext") == "Gutschrift":
             continue
-        print()
-        print()
-        print(row.get("Buchungstag"))
-        print(datetime.datetime.strptime(row.get("Buchungstag"), '%d.%m.%Y'))
-        print()
-        print(">>>>>")
-        print()
+
         row["Buchungstag"] = datetime.datetime.strptime(row.get("Buchungstag"), '%d.%m.%Y')
         invoice_list = re.findall(pattern, row.get("Verwendungszweck"))
         row["Betrag"] = float(row.get("Betrag").replace(",","."))
@@ -193,7 +187,6 @@ def read_csv_file(file_url):
 
 def check_bank_account(row, doctype):
     bank_account = frappe.get_list("Bank Account", filters={"iban": row.get("IBAN Zahlungsbeteiligter")})
-    print(bank_account)
     if not bank_account:
         bank_account = frappe.get_doc({"doctype": "Bank Account"})
         bank_account.bank = "Kunden Bank"

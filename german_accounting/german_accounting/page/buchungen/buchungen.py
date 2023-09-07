@@ -66,6 +66,7 @@ def create_journal_entry(args):
     j_entry.user_remark = args.posting_text
     j_entry.bill_no = args.voucher_id
     j_entry.bill_date = args.voucher_date
+    j_entry.due_date = args.due_date
 
     dimension_list = frappe.get_list("Accounting Dimension", fields=["name", "fieldname"])
     dimension_list.append({"name": "Project", "fieldname": "project"})

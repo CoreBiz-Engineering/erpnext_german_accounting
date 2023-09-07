@@ -18,5 +18,11 @@ frappe.query_reports["Umsatzliste"] = {
 			"fieldtype": "Date",
 			"reqd": 1
 		},
+		{
+			"fieldname": "created_on",
+			"label": __("Created On"),
+			"fieldtype": "Date",
+			"description": "Filter nach Erstelltag der Rechnung"
+		},
 	]
 };

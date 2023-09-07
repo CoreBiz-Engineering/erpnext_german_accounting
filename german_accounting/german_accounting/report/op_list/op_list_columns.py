@@ -20,7 +20,7 @@ def get_customer_columns():
             "label": _("Customer Name"),
             "fieldname": "customer_name",
             "fieldtype": "Data",
-            "width": "50px",
+            "width": "250px",
         },
         {"label": _("Voucher Type"), "fieldname": "voucher_type", "width": 120},
         {"label": _("Voucher Type"), "fieldname": "voucher_type_hidden", "hidden": 1, "width": 120},
@@ -89,7 +89,7 @@ def get_supplier_columns():
             "label": _("Account"),
             "fieldname": "account",
             "fieldtype": "Data",
-            "width": "100px",
+            "width": 200
         }, {
             "label": _("Supplier Name"),
             "fieldname": "supplier_name",
@@ -102,22 +102,20 @@ def get_supplier_columns():
             "fieldname": "voucher_no",
             "fieldtype": "Dynamic Link",
             "options": "voucher_type_hidden",
-            "width": 180,
         }, {
             "label": _("Remark"),
             "fieldname": "remark",
             "fieldtype": "Data",
-            "width": 150,
         }, {
             "label": _("Voucher No"),
             "fieldname": "cheque_no",
             "fieldtype": "Data",
-            "width": "75px",
+            "width": 200
         }, {
             "label": _("Posting Date"),
             "fieldname": "posting_date",
             "fieldtype": "Date",
-            "width": "75px",
+            "width": "90px",
         }, {
             "label": _("Soll"),
             "fieldname": "debit",
@@ -130,12 +128,10 @@ def get_supplier_columns():
             "label": _("Paid Amount"),
             "fieldname": "paid_amount",
             "fieldtype": "Currency",
-            "width": "75px",
         }, {
             "label": _("Outstanding Amount"),
             "fieldname": "outstanding_amount",
             "fieldtype": "Currency",
-            "width": "75px",
         }
     ]
     return columns

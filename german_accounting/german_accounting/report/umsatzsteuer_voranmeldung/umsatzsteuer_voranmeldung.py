@@ -15,8 +15,6 @@ from frappe import _
 def execute(filters=None):
     """Entry point for frappe."""
     result = {}
-    print("FILTERS: ", filters)
-    validate_filters(filters)
     if filters.get('view') == 'Kontenansicht':
         result = get_kontenansicht(filters)
 
@@ -221,12 +219,14 @@ def get_right_tax(entry):
 
 def calc_group_sum(gl_entries):
     mark_list = []
+
     for mark in gl_entries:
         if mark.get('mark') not in mark_list:
             mark_list.append(mark.get('mark'))
-    print(mark_list)
+
     res = []
     tax_res = 0
+
     for mark in mark_list:
         sum = 0
         tax_sum = 0
@@ -255,7 +255,7 @@ def calc_group_sum(gl_entries):
         else:
             s_h = ''
 
-        if row == '59':
+        if row in ['59','65']:
             res.append(
                 {
                     'row': row,
@@ -282,6 +282,7 @@ def calc_group_sum(gl_entries):
         # aktuell wird Vorsteuer minus Umsatzsteuer gerechnet
         # korrekt wird aber Umsatzsteuer minus Vorsteuer gerechnet
         # wird aktuell duch Vorzeichenkorrektur behoben
+
         tax_res = tax_res * (-1)
         res.append(
             {
@@ -332,6 +333,7 @@ def get_kontenansicht(filters):
                     """.format(year=to_date.year)
 
             acc_1781 = frappe.db.sql(sql, as_dict=1)
+
             for elem in acc_1781:
                 elem['root_account_value'] = round(elem.get('debit') - elem.get('credit'), 2)
                 sum = round(elem.get('debit') - elem.get('credit'), 2)
@@ -365,8 +367,7 @@ def get_kontenansicht(filters):
             try:
                 entry['tax_value'] = round(entry.get('account_value') * tax,2)
             except:
-                print('##################### ERROR #####################')
-                print(entry)
+                frappe.throw(_("Tax error"))
         if entry.get('mark') == entry.get('tax_mark'):
             entry.pop('account_value')
             entry.pop('mark')
